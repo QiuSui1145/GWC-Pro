@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="/icon.png">
+    <title>GWC 桌宠控制台</title>
+    <script src="./lib/tailwindcss.js"></script>
+    <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+    <style>body { background: #f8fafc; font-family: 'Microsoft YaHei', sans-serif; } .hide-scrollbar::-webkit-scrollbar { display: none; }</style>
+</head>
+<body class="p-6 text-gray-800 h-screen overflow-y-auto hide-scrollbar">
+    <h1 class="text-2xl font-black text-[#7562e3] mb-6 border-b-2 border-[#7562e3]/20 pb-2">系统设置台</h1>
+    
+    <div class="space-y-6 pb-10">
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+            <h2 class="text-sm font-bold text-gray-400 uppercase mb-3">快捷通道</h2>
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="pyapi.open_gwc_frontend()" class="bg-[#7562e3]/10 hover:bg-[#7562e3]/20 text-[#7562e3] py-2 rounded-lg font-bold text-sm transition-colors">🌐 GWC 主前端</button>
+                <button onclick="pyapi.open_backend_admin()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-lg font-bold text-sm transition-colors">⚙️ 后端管理</button>
+            </div>
+            <div class="mt-3 flex gap-3">
+                <button onclick="pyapi.toggle_topmost()" class="flex-1 bg-yellow-50 hover:bg-yellow-100 text-yellow-600 py-2 rounded-lg font-bold text-sm transition-colors">📌 切换全局置顶</button>
+                <button onclick="pyapi.close_pet()" class="flex-1 bg-red-50 hover:bg-red-100 text-red-500 py-2 rounded-lg font-bold text-sm transition-colors">🔌 退出桌宠</button>
+            </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+            <h2 class="text-sm font-bold text-gray-400 uppercase mb-3">视觉与界面</h2>
+
+            <div class="mb-4 pb-4 border-b border-gray-100">
+                <label class="block text-xs font-bold text-gray-500 mb-1">切换 Live2D 模型</label>
+                <select id="model-select" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#7562e3]" onchange="switchModel()">
+                    <option value="">拉取模型列表中...</option>
+                </select>
+            </div>
+
+            <div class="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
+                <span class="text-sm font-bold">桌宠自启动</span>
+                <input type="checkbox" id="auto-show-pet" class="w-5 h-5 accent-[#7562e3]" onchange="updateConfig()">
+            </div>
+
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-sm font-bold">隐藏桌面对话终端</span>
+                <input type="checkbox" id="hide-chat" class="w-5 h-5 accent-[#7562e3]" onchange="updateConfig()">
+            </div>
+            
+            <div class="space-y-3">
+                <div class="pb-3 border-b border-gray-100">
+                    <div class="flex justify-between text-xs font-bold text-gray-500 mb-1">
+                        <span>终端背景不透明度 (0即全透)</span><span id="chat-bg-val">80%</span>
+                    </div>
+                    <input type="range" id="chat-bg" min="0.0" max="1.0" step="0.05" class="w-full accent-[#7562e3]" oninput="updateUI()" onchange="updateConfig()">
+                </div>
+
+                <div>
+                    <div class="flex justify-between text-xs font-bold text-gray-500 mb-1">
+                        <span>横向边界裁剪 (调小以防挡鼠标)</span><span id="crop-w-val">55%</span>
+                    </div>
+                    <input type="range" id="crop-w" min="0.3" max="1.0" step="0.01" class="w-full accent-[#7562e3]" oninput="updateUI()" onchange="updateConfig()">
+                </div>
+                <div>
+                    <div class="flex justify-between text-xs font-bold text-gray-500 mb-1">
+                        <span>纵向高度裁剪</span><span id="crop-h-val">98%</span>
+                    </div>
+                    <input type="range" id="crop-h" min="0.4" max="1.2" step="0.01" class="w-full accent-[#7562e3]" oninput="updateUI()" onchange="updateConfig()">
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+            <h2 class="text-sm font-bold text-gray-400 uppercase mb-3">大脑与行为</h2>
+            <div class="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
+                <span class="text-sm font-bold">语音合成 (TTS)</span>
+                <span class="text-xs text-gray-400 font-bold bg-gray-100 px-2 py-1 rounded">已继承主站设置</span>
+            </div>
+            <div class="mb-4">
+                <label class="block text-xs font-bold text-gray-500 mb-1">隐藏系统提示词 (System Prompt, 选填)</label>
+                <textarea id="system-prompt" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none resize-none h-16" placeholder="例如：请用简短口语化回复..." onchange="updateConfig()"></textarea>
+            </div>
+            <div class="mb-4">
+                <label class="block text-xs font-bold text-gray-500 mb-1">上下文共享模式</label>
+                <select id="context-mode" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none" onchange="updateConfig()">
+                    <option value="independent">独立上下文 (仅限桌宠内)</option>
+                    <option value="inherit">继承 GWC 前端默认会话</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 mb-1">人设驱动模式</label>
+                <select id="persona-mode" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none mb-2" onchange="togglePersonaInput()">
+                    <option value="frontend">继承前端默认人设</option>
+                    <option value="independent">使用桌宠独立专属人设</option>
+                </select>
+                <textarea id="independent-persona" class="hidden w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none resize-none h-20" placeholder="输入专属人设..." onchange="updateConfig()"></textarea>
+            </div>
+            <div class="mt-4 pt-4 border-t border-gray-100">
+                <button onclick="pyapi.clear_chat_context()" class="w-full bg-red-50 hover:bg-red-100 text-red-500 py-2.5 rounded-lg font-bold text-sm transition-colors border border-red-100">
+                    🗑️ 清空桌宠独立上下文
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let pyapi = null;
+        let config = { crop_w: 1.0, crop_h: 1.0, chat_bg: 0.85, hide_chat: false, auto_show_pet: false, system_prompt: '', context: 'independent', persona: 'frontend', persona_text: '' };
+
+        new QWebChannel(qt.webChannelTransport, (channel) => {
+            pyapi = channel.objects.pyapi;
+            pyapi.get_ui_state((state_str) => {
+                if(state_str) {
+                    Object.assign(config, JSON.parse(state_str));
+                    document.getElementById('crop-w').value = config.crop_w ?? 1.0;
+                    document.getElementById('crop-h').value = config.crop_h ?? 1.0;
+                    document.getElementById('chat-bg').value = config.chat_bg ?? 0.85;
+                    document.getElementById('hide-chat').checked = config.hide_chat || false;
+                    document.getElementById('auto-show-pet').checked = config.auto_show_pet || false;
+                    document.getElementById('system-prompt').value = config.system_prompt || '';
+                    document.getElementById('context-mode').value = config.context || 'independent';
+                    document.getElementById('persona-mode').value = config.persona || 'frontend';
+                    document.getElementById('independent-persona').value = config.persona_text || '';
+
+                    updateUI();
+                    togglePersonaInput();
+                }
+            });
+        });
+
+        // ✨ 获取并加载 Live2D 模型列表
+        fetch('http://127.0.0.1:5201/api/models').then(res => res.json()).then(data => {
+            const select = document.getElementById('model-select');
+            select.innerHTML = '';
+            if (data.models.length === 0) {
+                select.innerHTML = '<option value="">未找到模型文件夹</option>';
+                return;
+            }
+            data.models.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m.path; opt.text = m.name;
+                select.appendChild(opt);
+            });
+        });
+
+        function switchModel() {
+            const path = document.getElementById('model-select').value;
+            if (pyapi && path) pyapi.switch_model(path);
+        }
+
+        function updateUI() {
+            config.crop_w = parseFloat(document.getElementById('crop-w').value);
+            config.crop_h = parseFloat(document.getElementById('crop-h').value);
+            config.chat_bg = parseFloat(document.getElementById('chat-bg').value);
+            
+            document.getElementById('crop-w-val').innerText = Math.round(config.crop_w * 100) + '%';
+            document.getElementById('crop-h-val').innerText = Math.round(config.crop_h * 100) + '%';
+            document.getElementById('chat-bg-val').innerText = Math.round(config.chat_bg * 100) + '%';
+            
+            if (pyapi) {
+                pyapi.broadcast_crop(config.crop_w, config.crop_h);
+                pyapi.broadcast_chat_bg(config.chat_bg);
+            }
+        }
+
+        function togglePersonaInput() {
+            const mode = document.getElementById('persona-mode').value;
+            const ta = document.getElementById('independent-persona');
+            if (mode === 'independent') ta.classList.remove('hidden');
+            else ta.classList.add('hidden');
+            updateConfig();
+        }
+
+        function updateConfig() {
+            config.hide_chat = document.getElementById('hide-chat').checked;
+            config.auto_show_pet = document.getElementById('auto-show-pet').checked;
+            config.system_prompt = document.getElementById('system-prompt').value;
+            config.context = document.getElementById('context-mode').value;
+            config.persona = document.getElementById('persona-mode').value;
+            config.persona_text = document.getElementById('independent-persona').value;
+            if (pyapi) {
+                pyapi.save_full_state(JSON.stringify(config));
+                pyapi.toggle_chat_window(!config.hide_chat);
+            }
+        }
+    </script>
+</body>
+</html>

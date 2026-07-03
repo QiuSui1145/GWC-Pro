@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>GWC DeskPet</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+
+    <!-- 桌面小聊天窗 -->
+    <div id="chat-container">
+        <div id="chat-messages"></div>
+        <div id="screenshot-preview" class="hidden">
+            <img id="screenshot-img" src="">
+            <button id="screenshot-cancel">✕</button>
+        </div>
+        <div id="chat-input-area">
+            <button id="btn-open-fullchat" title="打开快捷聊天">💬</button>
+            <button id="btn-mic" title="语音输入">🎤</button>
+            <button id="btn-screenshot-inline" title="截图">📷</button>
+            <input type="text" id="chat-input" placeholder="说点什么...">
+            <button id="chat-send" title="发送">➤</button>
+        </div>
+    </div>
+
+    <!-- 快捷聊天面板 -->
+    <div id="fullchat-panel" class="hidden">
+        <div class="fullchat-header">
+            <span>💬 快捷聊天</span>
+            <div class="fullchat-header-btns">
+                <button id="btn-topmost" title="切换置顶">📌</button>
+                <button id="btn-screenshot" title="截图">📷</button>
+                <button id="fullchat-close">✕</button>
+            </div>
+        </div>
+        <div id="fullchat-messages"></div>
+        <div id="fullchat-attachments" class="hidden">
+            <div id="fullchat-attachment-list"></div>
+        </div>
+        <div id="fullchat-input-area">
+            <button id="btn-upload" title="上传图片/文件">📎</button>
+            <input type="text" id="fullchat-input" placeholder="输入消息...">
+            <button id="btn-mic-fullchat" title="语音输入">🎤</button>
+            <button id="fullchat-send" title="发送">➤</button>
+        </div>
+        <input type="file" id="file-input" multiple accept="image/*,.txt,.md,.json,.csv,.pdf" style="display:none">
+    </div>
+
+    <!-- 设置面板 -->
+    <div id="settings-panel" class="hidden">
+        <div class="settings-content">
+            <div class="settings-header">
+                <h2>桌宠设置</h2>
+                <button id="settings-close">✕</button>
+            </div>
+            <div class="settings-section">
+                <h3>💬 大模型（继承前端设置）</h3>
+                <div id="llm-info" class="info-text">加载中...</div>
+                <p class="hint">请在 GWC 前端 → 设置 → API 中配置</p>
+            </div>
+            <div class="settings-section">
+                <h3>🔊 TTS 语音合成（继承前端设置）</h3>
+                <div id="tts-info" class="info-text">加载中...</div>
+                <p class="hint">请在 GWC 前端 → 设置 → 声音 中配置</p>
+            </div>
+            <div class="settings-section">
+                <h3>🎭 Live2D 模型切换</h3>
+                <p class="hint">自动扫描 live2d_models 文件夹</p>
+                <div class="form-group">
+                    <select id="model-select"><option value="">加载中...</option></select>
+                </div>
+                <button id="model-refresh" class="btn-secondary">🔄 重新扫描</button>
+            </div>
+            <div class="settings-section">
+                <h3>👁️ 辅助识图模型（可选）</h3>
+                <p class="hint">当主模型不支持多模态时，使用此模型识别截图/图片</p>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="vision-enabled"> 启用辅助识图
+                </label>
+                <div class="form-group">
+                    <label>API Base URL</label>
+                    <input type="text" id="vision-base-url" placeholder="https://api.openai.com/v1">
+                </div>
+                <div class="form-group">
+                    <label>API Key</label>
+                    <input type="password" id="vision-api-key" placeholder="sk-...">
+                </div>
+                <div class="form-group">
+                    <label>模型名称</label>
+                    <input type="text" id="vision-model" placeholder="gpt-4o">
+                </div>
+            </div>
+            <div class="settings-section">
+                <h3>🖥️ 界面</h3>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="hide-chat"> 隐藏桌面聊天框
+                </label>
+            </div>
+            <button id="settings-save" class="btn-save">保存设置</button>
+        </div>
+    </div>
+
+    <!-- 气泡 -->
+    <div id="bubble-container">
+        <div id="bubble-text"></div>
+    </div>
+
+    <script src="../libs/live2d.min.js"></script>
+    <script src="../libs/live2dcubismcore.min.js"></script>
+    <script src="../libs/pixi.min.js"></script>
+    <script src="../libs/pixi-live2d-display.min.js"></script>
+    <script src="../libs/pixi-live2d-display-extra.min.js"></script>
+    <script src="renderer.js"></script>
+</body>
+</html>

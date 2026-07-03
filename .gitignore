@@ -1,0 +1,35 @@
+# === 用户数据 ===
+userdata/
+
+# === 运行时 ===
+__pycache__/
+*.pyc
+.venv/
+node_modules/
+dist/
+runtime/
+
+# === 大型二进制 ===
+live2d_models/
+asr_model/
+llama_cpp/
+
+# === 音频 ===
+TTS/
+
+# === IDE ===
+.vscode/
+.idea/
+*.swp
+.claude/
+
+# === OS ===
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# === 临时 ===
+*.log
+CRASH_LOG.txt
+Output/
+WorkSpace/

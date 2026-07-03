@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>GWC DeskPet</title>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <script src="./lib/live2d.min.js?v=8"></script>
+    <script src="./lib/live2dcubismcore.min.js?v=8"></script>
+    <script src="./lib/pixi.min.js?v=8"></script>
+    <script src="./lib/index.min.js?v=8"></script>
+    <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+    <script>
+        let app, model, pyapi = null;
+        let currentScale = 0.18;
+
+        new QWebChannel(qt.webChannelTransport, function(ch) {
+            pyapi = ch.objects.pyapi;
+            pyapi.get_ui_state(function(s) {
+                if (s) { var st = JSON.parse(s); if (st.scale) currentScale = st.scale; }
+                loadModelsAndInit();
+            });
+        });
+
+        window.setNativeScale = function(s) { currentScale = s; if (model) { model.scale.set(currentScale); fitWindow(); } };
+        window.updateGlobalMouse = function(x, y) { if (model) model.focus(x, y); };
+        window.triggerMotion = function() { if (model && model.internalModel && model.internalModel.motionManager) model.internalModel.motionManager.startRandomMotion("TapBody", 3); };
+
+        function getCanvasSize() {
+            if (!model) return [0, 0];
+            try {
+                var im = model.internalModel;
+                if (im && typeof im.getSize === 'function') { var sz = im.getSize(); if (sz[0] > 0 && sz[1] > 0) return [sz[0], sz[1]]; }
+                if (im && im.coreModel && typeof im.coreModel.getCanvasWidth === 'function') { var w = im.coreModel.getCanvasWidth(), h = im.coreModel.getCanvasHeight(); if (w > 0 && h > 0) return [w, h]; }
+                if (im && im.width > 0 && im.height > 0) return [im.width, im.height];
+                if (im && im.originalWidth > 0 && im.originalHeight > 0) return [im.originalWidth, im.originalHeight];
+            } catch(e) {}
+            if (model.width > 0 && model.height > 0) return [model.width, model.height];
+            return [0, 0];
+        }
+
+        function fitWindow() {
+            if (!model || !pyapi || !app) return;
+            var sz = getCanvasSize();
+            if (sz[0] <= 0 || sz[1] <= 0) return;
+            var w = Math.max(80, Math.round(sz[0] * currentScale));
+            var h = Math.max(80, Math.round(sz[1] * currentScale));
+            pyapi.resize_window(w, h);
+            app.renderer.resize(w, h);
+            model.x = w / 2;
+            model.y = h / 2;
+        }
+
+        window.initLive2D = async function(url) {
+            try {
+                if (!app) {
+                    app = new PIXI.Application({
+                        view: document.getElementById("canvas"),
+                        autoStart: true,
+                        transparent: true,
+                        width: 250,
+                        height: 500
+                    });
+                }
+                if (model) { app.stage.removeChild(model); model.destroy(); model = null; }
+
+                model = await PIXI.live2d.Live2DModel.from(url);
+                model.anchor.set(0.5, 0.5);
+                app.stage.addChild(model);
+
+                var tryFit = function(attempt) {
+                    var sz = getCanvasSize();
+                    if (sz[0] > 0 && sz[1] > 0) {
+                        fitWindow();
+                    } else if (attempt < 20) {
+                        setTimeout(function() { tryFit(attempt + 1); }, 100);
+                    }
+                };
+                tryFit(0);
+            } catch(e) { console.error('模型加载失败:', e); }
+        };
+
+        async function loadModelsAndInit() {
+            try {
+                var res = await fetch('http://127.0.0.1:5201/api/models');
+                var data = await res.json();
+                if (data.models.length > 0) window.initLive2D(data.models[0].path);
+            } catch(e) { console.error('模型列表获取失败:', e); }
+        }
+
+        // 拖动窗口
+        let isDragging = false, lastX = 0, lastY = 0;
+        var canvas = document.getElementById("canvas");
+        canvas.addEventListener('mousedown', function(e) { if (e.button === 0) { isDragging = true; lastX = e.screenX; lastY = e.screenY; } });
+        window.addEventListener('mousemove', function(e) { if (isDragging && pyapi) { pyapi.drag_window(e.screenX - lastX, e.screenY - lastY); lastX = e.screenX; lastY = e.screenY; } });
+        window.addEventListener('mouseup', function() { if (isDragging && pyapi) { isDragging = false; pyapi.save_pet_transform(currentScale, 0, 0); } });
+
+        // 右键：什么都不做
+        canvas.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+
+        // 滚轮缩放
+        var wheelTimer = null;
+        canvas.addEventListener('wheel', function(e) {
+            if (!model) return;
+            var factor = e.deltaY > 0 ? 0.92 : 1.08;
+            currentScale = Math.max(0.05, Math.min(currentScale * factor, 0.8));
+            model.scale.set(currentScale);
+            fitWindow();
+            clearTimeout(wheelTimer);
+            wheelTimer = setTimeout(function() { if (pyapi) pyapi.save_pet_transform(currentScale, 0, 0); }, 500);
+        });
+    </script>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; }
+        #canvas { width: 100%; height: 100%; }
+    </style>
+</body>
+</html>

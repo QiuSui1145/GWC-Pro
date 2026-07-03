@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="/icon.png">
+    <title>GWC Chat</title>
+    <script src="./lib/tailwindcss.js"></script>
+    <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+    <style>
+        body, html { margin: 0; padding: 0; background: transparent; overflow: hidden; width: 100vw; height: 100vh; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .glass-panel {
+            background: rgba(255, 255, 255, var(--bg-alpha, 0.9));
+            backdrop-filter: blur(8px);
+            transition: background 0.3s;
+            border-color: rgba(229, 231, 235, var(--border-alpha, 0.8));
+        }
+        .msg-user { background: #7562e3; color: white; }
+        .msg-ai { background: white; color: #1f2937; border: 1px solid #f3f4f6; }
+        .msg-sys { background: #f3f4f6; color: #6b7280; }
+    </style>
+</head>
+<body class="select-none overflow-hidden">
+
+    <div id="container" class="flex flex-col gap-2 p-2" style="width: 320px;">
+
+        <!-- 聊天记录区域 (可折叠) -->
+        <div id="history-box" class="glass-panel rounded-2xl p-3 shadow-xl flex flex-col gap-2 max-h-[300px] overflow-y-auto hide-scrollbar border">
+            <div class="flex flex-col items-start w-full">
+                <span class="text-[10px] text-gray-400 font-bold mb-0.5">Sys</span>
+                <div class="text-xs px-2.5 py-1.5 rounded-xl shadow-sm msg-sys">终端已连接，等待桥接...</div>
+            </div>
+        </div>
+
+        <!-- 输入栏 -->
+        <div id="input-bar" class="flex gap-2 items-center glass-panel p-2 rounded-2xl shadow-lg border">
+            <button id="fold-btn" class="text-gray-400 hover:text-[#7562e3] transition-colors p-1 shrink-0" title="折叠/展开聊天记录">
+                <svg id="fold-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+            </button>
+            <input type="text" id="msg-input" class="flex-1 bg-transparent outline-none text-sm px-1 text-gray-700 placeholder-gray-400" placeholder="说点什么...">
+            <button id="mic-btn" class="text-gray-400 hover:text-red-500 transition-colors p-1 shrink-0" title="按住说话">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+            </button>
+            <button id="send-btn" class="bg-[#7562e3] hover:bg-[#5d4bc6] text-white text-xs px-3 py-1.5 rounded-xl transition-colors shrink-0 shadow-md font-bold">发送</button>
+        </div>
+
+    </div>
+
+    <script>
+    (function() {
+        // ================= 状态 =================
+        let pyapi = null;
+        let windowMode = 'web';
+        let chatHistory = [];
+        let abortCtrl = null;
+        let isGenerating = false;
+        let isFolded = false;
+        let currentScale = 1.0;
+
+        const container = document.getElementById('container');
+        const historyBox = document.getElementById('history-box');
+        const inputBar = document.getElementById('input-bar');
+        const input = document.getElementById('msg-input');
+        const sendBtn = document.getElementById('send-btn');
+        const foldBtn = document.getElementById('fold-btn');
+        const foldIcon = document.getElementById('fold-icon');
+
+        // ================= PyQt 桥接初始化 =================
+        new QWebChannel(qt.webChannelTransport, (channel) => {
+            pyapi = channel.objects.pyapi;
+            pyapi.get_ui_state((s) => {
+                if (s) {
+                    const state = JSON.parse(s);
+                    if (state.window_mode) windowMode = state.window_mode;
+                    if (state.chat_bg != null) updateBgAlpha(state.chat_bg);
+                }
+            });
+            notifyResize();
+        });
+
+        // ================= 模式切换 =================
+        window.setWindowMode = (mode) => { windowMode = mode; };
+
+        // ================= 背景透明度 =================
+        window.updateBgAlpha = (alpha) => {
+            document.documentElement.style.setProperty('--bg-alpha', alpha);
+            document.documentElement.style.setProperty('--border-alpha', alpha < 0.1 ? 0 : 0.8);
+            historyBox.style.boxShadow = alpha < 0.1 ? 'none' : '';
+        };
+
+        // ================= 窗口尺寸同步 =================
+        function notifyResize() {
+            if (!pyapi) return;
+            const rawH = isFolded ? inputBar.offsetHeight + 16 : container.scrollHeight + 16;
+            const h = Math.ceil(rawH * currentScale);
+            const w = Math.ceil(320 * currentScale + 16);
+            pyapi.resize_chat(w, h);
+        }
+
+        // ================= 滚轮缩放 =================
+        document.body.addEventListener('wheel', (e) => {
+            if (windowMode === 'native') return;
+            const factor = e.deltaY > 0 ? 0.95 : 1.05;
+            currentScale = Math.max(0.5, Math.min(currentScale * factor, 2.0));
+            container.style.transform = `scale(${currentScale})`;
+            container.style.transformOrigin = 'bottom center';
+            notifyResize();
+        }, { passive: true });
+
+        // ================= 折叠/展开 =================
+        foldBtn.addEventListener('click', () => {
+            isFolded = !isFolded;
+            historyBox.style.display = isFolded ? 'none' : 'flex';
+            foldIcon.style.transform = isFolded ? 'rotate(180deg)' : 'rotate(0deg)';
+            notifyResize();
+        });
+
+        // ================= 消息渲染 =================
+        function cleanMessage(text) {
+            if (typeof text !== 'string') return '';
+            // 优先提取 <TEXT> 内容（与前端一致）
+            const textMatch = text.match(/<TEXT[^>]*>([\s\S]*?)(?:<\/TEXT>|$)/i);
+            if (textMatch) return textMatch[1].trim();
+            // 回退：去掉 VOICE 标签
+            return text.replace(/<VOICE[^>]*>[\s\S]*?(?:<\/VOICE>|$)/gi, '')
+                       .replace(/<\/?(?:TEXT)[^>]*>/gi, '')
+                       .trim();
+        }
+
+        function appendMsg(role, content, id) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'flex flex-col ' + (role === 'User' ? 'items-end' : 'items-start') + ' w-full';
+            if (id) wrapper.id = id;
+
+            const label = document.createElement('span');
+            label.className = 'text-[10px] text-gray-400 font-bold mb-0.5';
+            label.textContent = role;
+
+            const bubble = document.createElement('div');
+            const cls = role === 'User' ? 'msg-user' : (role === 'Sys' ? 'msg-sys' : 'msg-ai');
+            bubble.className = 'text-xs px-2.5 py-1.5 rounded-xl shadow-sm ' + cls + ' max-w-full break-words';
+            bubble.innerHTML = content;
+
+            wrapper.appendChild(label);
+            wrapper.appendChild(bubble);
+            historyBox.appendChild(wrapper);
+            if (!isFolded) historyBox.scrollTop = historyBox.scrollHeight;
+            notifyResize();
+        }
+
+        // ================= 发送消息 (桥接模式) =================
+        async function handleSend() {
+            if (isGenerating) {
+                if (abortCtrl) abortCtrl.abort();
+                return;
+            }
+
+            const text = input.value.trim();
+            if (!text) return;
+
+            input.value = '';
+            appendMsg('User', text);
+            chatHistory.push({ role: 'user', content: text });
+
+            isGenerating = true;
+            abortCtrl = new AbortController();
+            input.disabled = true;
+            sendBtn.textContent = '停止';
+            sendBtn.classList.replace('bg-[#7562e3]', 'bg-red-500');
+
+            try {
+                const res = await fetch('http://127.0.0.1:5201/v1/chat/completions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model: 'bridge-model', messages: chatHistory, stream: true }),
+                    signal: abortCtrl.signal
+                });
+
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+                let aiReply = '';
+                let buffer = '';
+                appendMsg('AI', '...', 'active-msg');
+                const aiBox = document.getElementById('active-msg').querySelector('div');
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop();
+                    for (const line of lines) {
+                        const t = line.trim();
+                        if (t.startsWith('data: ') && t !== 'data: [DONE]') {
+                            try {
+                                const d = JSON.parse(t.slice(6));
+                                const c = d.choices?.[0]?.delta?.content;
+                                if (c) {
+                                    aiReply += c;
+                                    aiBox.innerHTML = cleanMessage(aiReply).replace(/\n/g, '<br>');
+                                    if (!isFolded) historyBox.scrollTop = historyBox.scrollHeight;
+                                }
+                            } catch(e) {}
+                        }
+                    }
+                }
+
+                // 存入历史（带标签，供下次上下文使用）
+                chatHistory.push({ role: 'assistant', content: aiReply });
+
+                // 通知 Python 触发动作 + 转发到前端 TTS 合成
+                if (pyapi) {
+                    pyapi.trigger_motion();
+                    // 提取纯文本（去掉 VOICE/TEXT 标签）发送到前端合成语音
+                    const ttsText = cleanMessage(aiReply);
+                    if (ttsText) pyapi.send_pet_tts(ttsText);
+                }
+
+            } catch(err) {
+                if (err.name === 'AbortError') {
+                    appendMsg('Sys', '<span class="text-amber-500">已打断</span>');
+                } else {
+                    appendMsg('Sys', '<span class="text-red-500">' + err.message + '</span>');
+                }
+            } finally {
+                document.getElementById('active-msg')?.removeAttribute('id');
+                input.disabled = false;
+                sendBtn.textContent = '发送';
+                sendBtn.classList.replace('bg-red-500', 'bg-[#7562e3]');
+                input.focus();
+                abortCtrl = null;
+                isGenerating = false;
+            }
+        }
+
+        // ================= 窗口拖动 (仅 Web 模式) =================
+        let isDragging = false, dragLastX = 0, dragLastY = 0;
+
+        document.body.addEventListener('mousedown', (e) => {
+            if (windowMode === 'native') return;
+            if (e.target === input || e.target === sendBtn || e.target === micBtn || micBtn.contains(e.target)) return;
+            if (e.button !== 0) return;
+            isDragging = true; dragLastX = e.screenX; dragLastY = e.screenY;
+        });
+        window.addEventListener('mousemove', (e) => {
+            if (windowMode === 'native' || !isDragging || !pyapi) return;
+            pyapi.drag_chat_window(e.screenX - dragLastX, e.screenY - dragLastY);
+            dragLastX = e.screenX; dragLastY = e.screenY;
+        });
+        const stopDrag = () => {
+            if (isDragging && pyapi) pyapi.save_chat_state();
+            isDragging = false;
+        };
+        window.addEventListener('mouseup', stopDrag);
+        window.addEventListener('blur', stopDrag);
+
+        // ================= 事件绑定 =================
+        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleSend(); });
+        sendBtn.addEventListener('click', handleSend);
+
+        // ================= 前端语音消息转发轮询 =================
+        (function pollForwardedMessages() {
+            fetch('http://127.0.0.1:5201/api/pet_chat/message/poll')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.user_msg) {
+                        appendMsg('User', data.user_msg);
+                        chatHistory.push({ role: 'user', content: data.user_msg });
+                        if (data.ai_msg) {
+                            appendMsg('AI', cleanMessage(data.ai_msg).replace(/\n/g, '<br>'));
+                            chatHistory.push({ role: 'assistant', content: data.ai_msg });
+                        }
+                    }
+                })
+                .catch(() => {})
+                .finally(() => { setTimeout(pollForwardedMessages, 1500); });
+        })();
+
+        // ================= 麦克风按钮（按住说话） =================
+        const micBtn = document.getElementById('mic-btn');
+        let micRecognition = null;
+        let micRecording = false;
+        let micResultText = '';
+
+        function initMicRecognition() {
+            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SR) return null;
+            const rec = new SR();
+            rec.lang = 'zh-CN';
+            rec.interimResults = false;
+            rec.continuous = false;
+            rec.onresult = (e) => {
+                const t = e.results[0]?.[0]?.transcript || '';
+                if (t.trim()) micResultText = t.trim();
+            };
+            rec.onend = () => {
+                micRecording = false;
+                micBtn.classList.remove('text-red-500');
+                micBtn.classList.add('text-gray-400');
+                setTimeout(() => {
+                    if (micResultText.trim()) {
+                        input.value = micResultText.trim();
+                        handleSend();
+                    }
+                    micResultText = '';
+                }, 200);
+            };
+            rec.onerror = (e) => {
+                if (e.error !== 'aborted') {
+                    console.warn('语音识别错误:', e.error);
+                }
+                micRecording = false;
+                micBtn.classList.remove('text-red-500');
+                micBtn.classList.add('text-gray-400');
+            };
+            return rec;
+        }
+
+        micBtn.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            if (!micRecognition) micRecognition = initMicRecognition();
+            if (!micRecognition) return;
+            micResultText = '';
+            try {
+                micRecognition.start();
+                micRecording = true;
+                micBtn.classList.remove('text-gray-400');
+                micBtn.classList.add('text-red-500');
+            } catch(err) {}
+        });
+
+        micBtn.addEventListener('mouseup', () => {
+            if (micRecording && micRecognition) {
+                try { micRecognition.abort(); } catch(err) {}
+            }
+        });
+
+        micBtn.addEventListener('mouseleave', () => {
+            if (micRecording && micRecognition) {
+                try { micRecognition.abort(); } catch(err) {}
+            }
+        });
+    })();
+    </script>
+</body>
+</html>
