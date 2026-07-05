@@ -1,0 +1,26 @@
+# === 敏感数据 ===
+userdata/
+*.log
+CRASH_LOG.txt
+
+# === 模型文件 ===
+live2d_models/
+
+# === 官网介绍页 ===
+index.html
+
+# === 运行时产物 ===
+__pycache__/
+*.pyc
+.venv/
+node_modules/
+dist/
+
+# === IDE ===
+.vscode/
+.idea/
+*.swp
+
+# === OS ===
+Thumbs.db
+Desktop.ini
