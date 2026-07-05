@@ -143,7 +143,7 @@
 <img width="272" height="499" alt="image" src="https://github.com/user-attachments/assets/a39a7014-ed77-4d62-9e9e-6c8d97af4bf8" />
 
 ### 方案二：手动部署
-
+（或许也可以试试一键启动脚本？）
 ### 1. 部署后端 / Deploy Backend
 
 ```bash
