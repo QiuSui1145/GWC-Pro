@@ -2,12 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../../contexts/AppContext';
 import SettingSlider from '../ui/SettingSlider';
 import SettingSectionTitle from '../ui/SettingSectionTitle';
+<<<<<<< HEAD
 import SettingToggle from '../ui/SettingToggle';
+=======
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
 import { Plus, Edit3, Trash2, RefreshCw, Cpu, CheckCircle, XCircle, Loader2, Download, ExternalLink, Box, Upload, Server } from 'lucide-react';
 
 export default function ApiTab() {
   const { settings, setSettings, availableModels, isFetchingModels, fetchOpenAIModels, saveApiProfile, applyApiProfile, renameApiProfile, deleteApiProfile } = useApp();
 
+<<<<<<< HEAD
   // OpenCode 跟随启动开关。存于服务端 userdata/launcher_config.json，
   // 因为读取方是启动批处理（.bat），拿不到浏览器 localStorage。
   const [disableOcAutostart, setDisableOcAutostart] = useState(false);
@@ -35,6 +39,8 @@ export default function ApiTab() {
     }
   };
 
+=======
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
   // OpenCode 状态
   const [ocStatus, setOcStatus] = useState(null);
   const [ocModels, setOcModels] = useState('');
@@ -479,6 +485,7 @@ export default function ApiTab() {
 
           {ocTestResult && <div className={`mt-2 p-2 rounded-lg text-xs font-bold ${ocTestResult.ok ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{ocTestResult.msg}</div>}
           <p className="mt-3 text-xs text-[#a89578]">工作模式开启后，消息将由 OpenCode 处理（文件操作、联网搜索等），继承当前人设风格回复。</p>
+<<<<<<< HEAD
 
           {/* 启动项：是否随「启动全栈环境」一起拉起 OpenCode CLI */}
           <div className="mt-4 pt-4 border-t border-dashed border-[#e6d5b8]">
@@ -493,6 +500,8 @@ export default function ApiTab() {
               {ocAutostartMsg && <span className="ml-1 font-bold text-[#4fa0d8]">{ocAutostartMsg}</span>}
             </p>
           </div>
+=======
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
         </div>
       </div>
     </div>

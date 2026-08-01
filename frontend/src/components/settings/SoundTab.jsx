@@ -3,11 +3,16 @@ import { useApp } from '../../contexts/AppContext';
 import SettingToggle from '../ui/SettingToggle';
 import SettingSlider from '../ui/SettingSlider';
 import SettingSectionTitle from '../ui/SettingSectionTitle';
+<<<<<<< HEAD
 import { Upload, Trash2, Music, AlertCircle, Mic2, Play, Square, RefreshCw, Loader2, CheckCircle, XCircle } from 'lucide-react';
+=======
+import { Upload, Trash2, Music, AlertCircle } from 'lucide-react';
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
 
 export default function SoundTab() {
   const { settings, setSettings, handleBgmUpload, removeBgm, bgmList, currentBgmIndex, setCurrentBgmIndex, isBgmPlaying, toggleBgm } = useApp();
 
+<<<<<<< HEAD
   // ---- 内置配音 (GPT-SoVITS) ----
   const [ttsStatus, setTtsStatus] = React.useState(null);   // null = 尚未探测
   const [ttsVoices, setTtsVoices] = React.useState([]);
@@ -148,6 +153,8 @@ export default function SoundTab() {
     setVoiceBusy('');
   };
 
+=======
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
   return (
     <div className="space-y-8 animate-fade-in">
       {/* 主界面音乐组件 */}
@@ -216,6 +223,7 @@ export default function SoundTab() {
           <div className="md:col-span-3 border-t border-dashed border-[#e6d5b8] pt-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
               <h4 className="text-sm font-bold text-[#4a4036]">参考音频配置 (克隆/指定音色必填)</h4>
+<<<<<<< HEAD
               <SettingToggle label="🎙️ 内置配音" value={settings.ttsBuiltIn} onChange={v => setSettings({...settings, ttsBuiltIn: v})} />
             </div>
 
@@ -394,6 +402,21 @@ export default function SoundTab() {
               <div className="md:col-span-3"><label className="block text-xs text-[#7a6b5d] mb-1 font-bold">参考音频文本</label><input type="text" value={settings.ttsRefText || ''} onChange={e => setSettings({...settings, ttsRefText: e.target.value})} className="w-full bg-white border border-[#d9c5b2] text-[#4a4036] rounded-md px-3 py-2 text-sm outline-none shadow-inner" placeholder="参考音频里说的话..." /></div>
             </div>
             <p className="text-[11px] text-[#7a6b5d] mt-2">留空则不传参考音频参数，由服务端使用自身配置的默认音色。</p>
+=======
+              <SettingToggle label="📱 云端挂载模式" value={settings.ttsMobileMode} onChange={v => setSettings({...settings, ttsMobileMode: v})} />
+            </div>
+            {!settings.ttsMobileMode ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-2"><label className="block text-xs text-[#7a6b5d] mb-1 font-bold">参考音频路径/URL</label><input type="text" value={settings.ttsRefAudio || ''} onChange={e => setSettings({...settings, ttsRefAudio: e.target.value})} className="w-full bg-white border border-[#d9c5b2] text-[#4a4036] rounded-md px-3 py-2 text-sm outline-none shadow-inner" placeholder="如: D:\audio\ref.wav" /></div>
+                <div><label className="block text-xs text-[#7a6b5d] mb-1 font-bold">参考音频语种</label><select value={settings.ttsRefLang || 'zh'} onChange={e => setSettings({...settings, ttsRefLang: e.target.value})} className="w-full bg-white border border-[#d9c5b2] text-[#4a4036] font-bold rounded-md px-3 py-2 outline-none shadow-inner"><option value="zh">中文</option><option value="ja">日文</option><option value="en">英文</option><option value="ko">韩文</option></select></div>
+                <div className="md:col-span-3"><label className="block text-xs text-[#7a6b5d] mb-1 font-bold">参考音频文本</label><input type="text" value={settings.ttsRefText || ''} onChange={e => setSettings({...settings, ttsRefText: e.target.value})} className="w-full bg-white border border-[#d9c5b2] text-[#4a4036] rounded-md px-3 py-2 text-sm outline-none shadow-inner" placeholder="参考音频里说的话..." /></div>
+              </div>
+            ) : (
+              <div className="bg-[#fdfaf5] p-5 rounded-xl border border-[#e6d5b8] shadow-inner text-xs text-[#7a6b5d] leading-relaxed">
+                <strong className="text-emerald-600">云端模式已开启：</strong>系统已剥离客户端的参考音频参数，自动使用服务端默认配置的参考音色。
+              </div>
+            )}
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
           </div>
         </div>
       </div>

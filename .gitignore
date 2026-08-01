@@ -5,6 +5,7 @@ CRASH_LOG.txt
 
 # === 模型文件 ===
 live2d_models/
+<<<<<<< HEAD
 # MMD 用户模型（大文件），保留说明文件
 mmd_models/*
 !mmd_models/把MMD模型放这里.txt
@@ -19,6 +20,8 @@ tts/*
 !tts/start_tts.bat
 !tts/copy_tts.py
 !tts/README.md
+=======
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
 
 # === 官网介绍页 ===
 index.html
@@ -29,8 +32,11 @@ __pycache__/
 .venv/
 node_modules/
 dist/
+<<<<<<< HEAD
 # 桌宠 MMD 打包产物（由 electron-app/build-mmd.mjs 从 mmd.src.js 生成）
 electron-app/renderer/mmd.bundle.js
+=======
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
 
 # === IDE ===
 .vscode/

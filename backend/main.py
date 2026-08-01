@@ -52,6 +52,7 @@ except Exception as e:
     qq_bot = None
 
 app = FastAPI(title="GWC AI Backend (Bridge Mode)")
+<<<<<<< HEAD
 
 # ==========================================
 # 服务端会话令牌鉴权
@@ -144,6 +145,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+=======
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
 
 # ==========================================
 # 大模型通讯桥接（前端主脑模式）
@@ -469,6 +473,7 @@ async def scan_local_models():
                 result.append({"name": os.path.basename(os.path.dirname(os.path.join(root, file))), "path": f"http://127.0.0.1:5201/models/{encoded_path}"})
     return {"models": result}
 
+<<<<<<< HEAD
 # ==========================================
 # MMD 3D 模型扫描（每个含 .pmx/.pmd 的文件夹算一个模型；同/子目录的 .vmd 作为可选动作）
 # ==========================================
@@ -585,6 +590,8 @@ async def scan_mmd_models():
             result.append({"name": name, "path": _mmd_url(root, pf), "motions": own + shared})
     return {"models": result, "shared_motions": shared}
 
+=======
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
 @app.post("/admin/api/fetch_models")
 async def dummy_fetch_models(req: Request):
     return {"data": [{"id": "请在主前端页面探测模型"}]}
@@ -1269,7 +1276,11 @@ async def auth_setup_default():
         "id": "Admin", "salt": salt.hex(), "hash": dk.hex(),
         "createdAt": int(time.time() * 1000), "isDefault": True
     })
+<<<<<<< HEAD
     return {"ok": True, "msg": "Admin 账号已创建", "created": True, "token": _AUTH.issue("Admin")}
+=======
+    return {"ok": True, "msg": "Admin 账号已创建", "created": True}
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
 
 
 @app.post("/api/auth/login")
@@ -1292,8 +1303,13 @@ async def auth_login(req: Request):
             user["salt"] = salt.hex()
             user["hash"] = dk.hex()
             store.save_user(username, user)
+<<<<<<< HEAD
             return {"ok": True, "mirror_id": f"user_{username}", "token": _AUTH.issue(username)}
         return {"ok": True, "mirror_id": f"user_{username}", "need_password": True, "token": _AUTH.issue(username)}
+=======
+            return {"ok": True, "mirror_id": f"user_{username}"}
+        return {"ok": True, "mirror_id": f"user_{username}", "need_password": True}
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
     if not password:
         return {"ok": False, "msg": "请输入密码"}
     import hashlib
@@ -1301,7 +1317,11 @@ async def auth_login(req: Request):
     dk = hashlib.pbkdf2_hmac('sha-256', password.encode(), salt, 100000)
     if dk.hex() != user["hash"]:
         return {"ok": False, "msg": "密码错误"}
+<<<<<<< HEAD
     return {"ok": True, "mirror_id": f"user_{username}", "token": _AUTH.issue(username)}
+=======
+    return {"ok": True, "mirror_id": f"user_{username}"}
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
 
 
 @app.post("/api/auth/change_password")
@@ -1369,7 +1389,11 @@ async def auth_register_v2(req: Request):
         user_data["salt"] = salt.hex()
         user_data["hash"] = dk.hex()
     store.save_user(username, user_data)
+<<<<<<< HEAD
     return {"ok": True, "mirror_id": f"user_{username}", "token": _AUTH.issue(username)}
+=======
+    return {"ok": True, "mirror_id": f"user_{username}"}
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
 
 
 @app.post("/api/auth/force_set_password")
@@ -1383,16 +1407,23 @@ async def auth_force_set_password(req: Request):
     user = store.get_user(username)
     if not user:
         return {"ok": False, "msg": "用户不存在"}
+<<<<<<< HEAD
     # 仅允许为“无密码账号”设置密码，防止劫持已设密码的账号
     if user.get("hash"):
         return {"ok": False, "msg": "该账号已设置密码，如需修改请通过修改密码功能"}
+=======
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
     import hashlib
     salt = os.urandom(16)
     dk = hashlib.pbkdf2_hmac('sha-256', password.encode(), salt, 100000)
     user["salt"] = salt.hex()
     user["hash"] = dk.hex()
     store.save_user(username, user)
+<<<<<<< HEAD
     return {"ok": True, "token": _AUTH.issue(username)}
+=======
+    return {"ok": True}
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
 
 
 @app.post("/api/auth/admin/reset_password")
@@ -1574,6 +1605,7 @@ async def save_login_config(req: Request):
     return {"ok": True}
 
 
+<<<<<<< HEAD
 # --- 启动器配置（供 启动全栈环境.bat 读取）---
 # 放在 userdata 根目录且格式固定，便于批处理用 findstr 判断。
 
@@ -1809,6 +1841,8 @@ async def tts_set_voice(req: Request):
         return {"ok": False, "msg": f"切换音色失败: {e}"}
 
 
+=======
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
 # --- 核心 JSON 数据 API ---
 
 @app.get("/api/userdata/{mirror_id}/core/{key}")
@@ -1965,12 +1999,18 @@ async def upload_model_file(mirror_id: str, file: UploadFile = File(...), model_
     mid = store._sanitize(mirror_id)
     safe_model_id = store._sanitize(model_id)
     data = await file.read()
+<<<<<<< HEAD
     model_dir = os.path.abspath(os.path.join(store.base_dir, mid, 'models', safe_model_id))
     safe_path = path.replace('\\', '/').replace('..', '_').lstrip('/')
     dest = os.path.abspath(os.path.join(model_dir, safe_path))
     # 防目录穿越/绝对路径逃逸：目标必须落在模型目录内
     if not (dest == model_dir or dest.startswith(model_dir + os.sep)):
         return Response(status_code=400, content='{"error":"非法路径"}', media_type="application/json")
+=======
+    model_dir = os.path.join(store.base_dir, mid, 'models', safe_model_id)
+    safe_path = path.replace('..', '_')
+    dest = os.path.join(model_dir, safe_path)
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
     store._atomic_write_bytes(dest, data)
     return {"ok": True, "path": safe_path}
 
@@ -2283,7 +2323,10 @@ async def serve_admin_ui():
 
 
 app.mount("/models", StaticFiles(directory=MODELS_DIR), name="models")
+<<<<<<< HEAD
 app.mount("/mmd_models", StaticFiles(directory=MMD_MODELS_DIR), name="mmd_models")
+=======
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
 
 # ==========================================
 # OpenCode 集成
@@ -2375,6 +2418,7 @@ async def opencode_run(req: OpenCodeRequest):
             pf.write(prompt)
 
         # --auto: 自动批准权限  --continue: 连续上下文
+<<<<<<< HEAD
         # 模型名会拼入 shell 命令，必须白名单校验以防命令注入
         import re as _re
         model_arg = ""
@@ -2383,6 +2427,12 @@ async def opencode_run(req: OpenCodeRequest):
                 return {"error": "非法的模型名称"}
             model_arg = f' -m {req.model}'
         cmd_str = f'cmd /c ""{path}" run --format json --auto --continue{model_arg} < "{prompt_file}" > "{tmp_out}" 2>&1"'
+=======
+        cmd_str = f'cmd /c ""{path}" run --format json --auto --continue'
+        if req.model:
+            cmd_str += f' -m {req.model}'
+        cmd_str += f' < "{prompt_file}" > "{tmp_out}" 2>&1"'
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
 
         proc = sp.Popen(cmd_str, cwd=cwd, env=env, shell=True)
 

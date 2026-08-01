@@ -281,16 +281,26 @@ class UserdataStore:
         """
         mid = self._sanitize(mirror_id)
         safe_mid = self._sanitize(model_id)
+<<<<<<< HEAD
         model_dir = os.path.abspath(os.path.join(self.base_dir, mid, 'models', safe_mid))
+=======
+        model_dir = os.path.join(self.base_dir, mid, 'models', safe_mid)
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
         self._ensure_dir(model_dir)
 
         saved_files = []
         for rel_path, file_data in file_list:
+<<<<<<< HEAD
             # 清理路径，保留子目录结构；防目录穿越/绝对路径逃逸
             safe_rel = rel_path.replace('\\', '/').replace('..', '_').lstrip('/')
             dest = os.path.abspath(os.path.join(model_dir, safe_rel))
             if not (dest == model_dir or dest.startswith(model_dir + os.sep)):
                 continue
+=======
+            # 清理路径，保留子目录结构
+            safe_rel = rel_path.replace('\\', '/').replace('..', '_')
+            dest = os.path.join(model_dir, safe_rel)
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
             self._atomic_write_bytes(dest, file_data)
             saved_files.append(safe_rel)
 
@@ -329,12 +339,18 @@ class UserdataStore:
         """获取模型内某个文件的路径"""
         mid = self._sanitize(mirror_id)
         safe_mid = self._sanitize(model_id)
+<<<<<<< HEAD
         # 清理文件路径；防目录穿越/绝对路径逃逸
         base = os.path.abspath(os.path.join(self.base_dir, mid, 'models', safe_mid))
         safe_rel = file_path.replace('\\', '/').replace('..', '_').lstrip('/')
         full_path = os.path.abspath(os.path.join(base, safe_rel))
         if not (full_path == base or full_path.startswith(base + os.sep)):
             return None
+=======
+        # 清理文件路径
+        safe_rel = file_path.replace('\\', '/').replace('..', '_')
+        full_path = os.path.join(self.base_dir, mid, 'models', safe_mid, safe_rel)
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
         if os.path.exists(full_path):
             return full_path
         return None

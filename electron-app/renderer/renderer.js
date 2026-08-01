@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // IPC 接口抽象：优先用 preload 暴露的 window.electronAPI；否则在 nodeIntegration
 // 环境下用 ipcRenderer 构造；再不行则 no-op 兜底（保证 Live2D 仍能显示）。
 const electronAPI = (function () {
@@ -42,6 +43,9 @@ const electronAPI = (function () {
 
 // 供 MMD 引擎(独立 bundle)写面包屑日志用
 window.__petLog = (msg) => { try { electronAPI.log(msg) } catch (e) {} }
+=======
+const { ipcRenderer } = require('electron')
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
 
 const BACKEND_PORT = 5201
 const BACKEND_URL = `http://127.0.0.1:${BACKEND_PORT}`
@@ -54,6 +58,7 @@ let mouseX = 0, mouseY = 0
 let chatHistory = [] // 共享聊天记录
 
 // ============ 穿透控制 ============
+<<<<<<< HEAD
 // 未捕获异常/Promise 拒绝统一打到 console.error，
 // 由主进程写入 userdata/pet_debug.log（穿透时 DevTools 打不开也能诊断）
 window.addEventListener('error', (e) => {
@@ -83,6 +88,9 @@ function emergencyRecover() {
     try { addSystemMsg('🆘 已强制恢复鼠标穿透并卸载 MMD') } catch (e) {}
 }
 window.__gwcEmergencyRecover = emergencyRecover
+=======
+function setPT(on) { ipcRenderer.send('set-ignore-mouse-events', { ignore: on }) }
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
 function isMouseOverUI() { return isOver('fullchat-panel') || isOver('settings-panel') || isOver('chat-container') }
 function isOver(id) {
     const el = document.getElementById(id)
@@ -94,6 +102,7 @@ function isOver(id) {
 function startMouseTracker() {
     document.addEventListener('mousemove', (e) => { mouseX = e.clientX; mouseY = e.clientY })
     setInterval(() => {
+<<<<<<< HEAD
         // 故障安全：任何异常都必须恢复鼠标穿透，否则全屏透明窗口会夺走
         // 整个桌面的鼠标，让用户无法操作任何程序。
         try {
@@ -108,11 +117,17 @@ function startMouseTracker() {
             console.warn('[桌宠] 鼠标追踪异常，已强制恢复穿透', e)
             try { setPT(true) } catch (e2) {}
         }
+=======
+        const sx = mouseX * 2, sy = mouseY * 2
+        const overModel = model && sx >= interactionX && sx <= interactionX + interactionWidth && sy >= interactionY && sy <= interactionY + interactionHeight
+        setPT(!(overModel || isMouseOverUI()))
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
     }, 50)
 }
 
 // ============ PIXI ============
 function initPIXI() {
+<<<<<<< HEAD
     const cv = document.getElementById('canvas')
     // 诊断：浏览器对同时存活的 WebGL 上下文有上限，MMD(three.js) 的上下文
     // 可能挤掉 PIXI 的上下文，导致 Live2D 不再出画。这里记录下来以便确认。
@@ -125,13 +140,19 @@ function initPIXI() {
         electronAPI.log('[桌宠] PIXI WebGL 上下文已恢复')
     })
     app = new PIXI.Application({ view: cv, autoStart: true, transparent: true, width: window.innerWidth * 2, height: window.innerHeight * 2 })
+=======
+    app = new PIXI.Application({ view: document.getElementById('canvas'), autoStart: true, transparent: true, width: window.innerWidth * 2, height: window.innerHeight * 2 })
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
     app.stage.position.set(window.innerWidth / 2, window.innerHeight / 2)
     app.stage.pivot.set(window.innerWidth / 2, window.innerHeight / 2)
 }
 
 async function loadModel(url) {
     if (!app) initPIXI()
+<<<<<<< HEAD
     currentModelPath = url // 记录当前模型，供退出 MMD 后重新加载
+=======
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
     try {
         if (model) { app.stage.removeChild(model); model.destroy() }
         model = await PIXI.live2d.Live2DModel.from(url)
@@ -150,6 +171,7 @@ function updateIA() {
     interactionY = model.y + (model.height - interactionHeight) / 2
 }
 
+<<<<<<< HEAD
 // MMD 激活时必须完全停手：否则这些 window 级监听会继续改写并保存
 // Live2D 的位置/缩放，导致两套模型共用一套设置，退回 Live2D 时跑到屏幕角落。
 function l2dLocked() { return !!(window.mmd && window.mmd.isActive()) }
@@ -177,16 +199,35 @@ function setupInteraction() {
     let wheelTimer = null
     window.addEventListener('wheel', (e) => {
         if (l2dLocked() || !model || isMouseOverUI()) return
+=======
+function setupInteraction() {
+    if (!model) return; model.interactive = true
+    model.containsPoint = (p) => p.x >= interactionX && p.x <= interactionX + interactionWidth && p.y >= interactionY && p.y <= interactionY + interactionHeight
+    model.on('mousedown', (e) => { const p = e.data.global; if (model.containsPoint(p)) { model._d = true; model._ox = p.x - model.x; model._oy = p.y - model.y } })
+    model.on('mousemove', (e) => { if (model._d) { model.x = e.data.global.x - model._ox; model.y = e.data.global.y - model._oy; updateIA() } })
+    window.addEventListener('mouseup', () => { if (model._d) { model._d = false; ipcRenderer.send('save-model-position', { x: model.x / window.innerWidth, y: model.y / window.innerHeight, scale: model.scale.x }) } })
+    model.on('click', () => { if (model.containsPoint(app.renderer.plugins.interaction.mouse.global)) { model.motion('Tap'); model.expression() } })
+    window.addEventListener('contextmenu', (e) => e.preventDefault())
+    // 滚轮缩放：仅在鼠标不在 UI 元素上时生效
+    let wheelTimer = null
+    window.addEventListener('wheel', (e) => {
+        if (!model || isMouseOverUI()) return
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
         const f = e.deltaY > 0 ? 0.92 : 1.08
         const mx = app.renderer.plugins.interaction.mouse.global.x, my = app.renderer.plugins.interaction.mouse.global.y
         model.x -= (mx - model.x) * (f - 1); model.y -= (my - model.y) * (f - 1)
         model.scale.set(model.scale.x * f); updateIA()
         clearTimeout(wheelTimer)
+<<<<<<< HEAD
         wheelTimer = setTimeout(() => { electronAPI.saveModelPosition({ x: model.x / window.innerWidth, y: model.y / window.innerHeight, scale: model.scale.x }) }, 500)
+=======
+        wheelTimer = setTimeout(() => { ipcRenderer.send('save-model-position', { x: model.x / window.innerWidth, y: model.y / window.innerHeight, scale: model.scale.x }) }, 500)
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
     }, { passive: false })
     window.addEventListener('resize', () => { if (app?.renderer) { app.renderer.resize(window.innerWidth * 2, window.innerHeight * 2); app.stage.position.set(window.innerWidth / 2, window.innerHeight / 2); app.stage.pivot.set(window.innerWidth / 2, window.innerHeight / 2); updateIA() } })
 }
 
+<<<<<<< HEAD
 // 退出 MMD 返回 Live2D。
 // 实测：单纯把 canvas 显示回来后 Live2D 常常不出画，必须重新加载模型才行
 // （日志已排除 WebGL 上下文丢失）。既然“手动切换模型”能稳定生效，
@@ -233,6 +274,8 @@ function restoreLive2DPosition() {
     updateIA()
 }
 
+=======
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
 async function initModels() {
     try { const r = await fetch(`${BACKEND_URL}/api/models`); const d = await r.json(); if (d.models?.length) await loadModel(d.models[0].path) } catch (e) { setTimeout(initModels, 2000) }
 }
@@ -256,8 +299,13 @@ async function pollPetMessages() {
 pollPetMessages();
 setInterval(pollPetMessages, 2000);  // 每 2 秒轮询一次
 async function loadConfigs() {
+<<<<<<< HEAD
     try { petConfig = await electronAPI.getPetConfig() } catch (e) { petConfig = { alwaysOnTop: true, visionModel: { enabled: false } } }
     try { frontendSettings = await electronAPI.getFrontendSettings(); console.log('[配置]', frontendSettings?.openaiBaseUrl, frontendSettings?.aiModel) } catch (e) { frontendSettings = null }
+=======
+    try { petConfig = await ipcRenderer.invoke('get-pet-config') } catch (e) { petConfig = { alwaysOnTop: true, visionModel: { enabled: false } } }
+    try { frontendSettings = await ipcRenderer.invoke('get-frontend-settings'); console.log('[配置]', frontendSettings?.openaiBaseUrl, frontendSettings?.aiModel) } catch (e) { frontendSettings = null }
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
 }
 function applyConfig() { if (petConfig?.hideChat) document.getElementById('chat-container').classList.add('hidden') }
 
@@ -309,7 +357,11 @@ function addSystemMsg(text) {
 
 // ============ 截图 ============
 async function takeScreenshot() {
+<<<<<<< HEAD
     const d = await electronAPI.takeScreenshot()
+=======
+    const d = await ipcRenderer.invoke('take-screenshot')
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
     if (d) { pendingScreenshot = d; document.getElementById('screenshot-img').src = d; document.getElementById('screenshot-preview').classList.remove('hidden'); addSystemMsg('📸 截图已捕获') }
 }
 
@@ -431,8 +483,13 @@ window.addEventListener('mouseup', () => { chatDrag = false })
 
 // 置顶
 const btnTop = document.getElementById('btn-topmost')
+<<<<<<< HEAD
 async function updateTopBtn() { const t = await electronAPI.getAlwaysOnTop(); btnTop.classList.toggle('active', t) }
 btnTop.addEventListener('click', async () => { const t = await electronAPI.toggleAlwaysOnTop(); btnTop.classList.toggle('active', t) })
+=======
+async function updateTopBtn() { const t = await ipcRenderer.invoke('get-always-on-top'); btnTop.classList.toggle('active', t) }
+btnTop.addEventListener('click', async () => { const t = await ipcRenderer.invoke('toggle-always-on-top'); btnTop.classList.toggle('active', t) })
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
 
 // Live2D 模型切换（设置面板内）
 let availableModels = []
@@ -473,6 +530,7 @@ document.getElementById('model-select')?.addEventListener('change', async (e) =>
     await loadModel(path)
     if (!petConfig) petConfig = {}
     petConfig.currentModel = path
+<<<<<<< HEAD
     await electronAPI.savePetConfig(petConfig)
     addSystemMsg('✅ 模型已切换')
 })
@@ -658,6 +716,14 @@ document.getElementById('mmd-rerender')?.addEventListener('click', rerenderMmd)
 
 // 设置面板
 electronAPI.on('open-settings', async () => {
+=======
+    await ipcRenderer.invoke('save-pet-config', petConfig)
+    addSystemMsg('✅ 模型已切换')
+})
+
+// 设置面板
+ipcRenderer.on('open-settings', async () => {
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
     if (!stPanel.classList.contains('hidden')) { closePanel(stPanel); return }
     await loadConfigs()
     const info = []; if (frontendSettings) { info.push(`API: ${frontendSettings.openaiBaseUrl || '(未配置)'}`); info.push(`模型: ${frontendSettings.aiModel || '(未配置)'}`); info.push(`Key: ${frontendSettings.openaiApiKey ? '已配置' : '(未配置)'}`) } else info.push('(未读取到前端配置)')
@@ -668,6 +734,7 @@ electronAPI.on('open-settings', async () => {
     document.getElementById('hide-chat').checked = petConfig?.hideChat || false
     currentModelPath = petConfig?.currentModel || currentModelPath
     await loadModelList()
+<<<<<<< HEAD
     await loadMmdList()
     // 同步 MMD 控件到已保存的实际值，避免显示成默认值
     if (window.mmd) {
@@ -680,6 +747,8 @@ electronAPI.on('open-settings', async () => {
         const gb = document.getElementById('mmd-global-brightness'); if (gb) gb.value = window.mmd.getGlobalBrightness()
         const rp = document.getElementById('mmd-restpose'); if (rp) rp.value = window.mmd.getRestPoseAngle()
     }
+=======
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
     openPanel(stPanel)
 })
 document.getElementById('settings-close').addEventListener('click', () => closePanel(stPanel))
@@ -687,12 +756,17 @@ document.getElementById('settings-save').addEventListener('click', async () => {
     if (!petConfig) petConfig = {}
     petConfig.visionModel = { enabled: document.getElementById('vision-enabled').checked, baseUrl: document.getElementById('vision-base-url').value.trim(), apiKey: document.getElementById('vision-api-key').value.trim(), model: document.getElementById('vision-model').value.trim() }
     petConfig.hideChat = document.getElementById('hide-chat').checked
+<<<<<<< HEAD
     await electronAPI.savePetConfig(petConfig)
+=======
+    await ipcRenderer.invoke('save-pet-config', petConfig)
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
     if (petConfig.hideChat) chatContainer.classList.add('hidden'); else chatContainer.classList.remove('hidden')
     addSystemMsg('✅ 设置已保存'); closePanel(stPanel)
 })
 
 // IPC
+<<<<<<< HEAD
 electronAPI.on('switch-model', (p) => loadModel(p))
 electronAPI.on('reset-position', () => { if (window.mmd && window.mmd.isActive()) { window.mmd.resetPosition(); return } if (model) { model.x = window.innerWidth * 0.75; model.y = window.innerHeight * 0.65; updateIA() } })
 electronAPI.on('force-passthrough', () => emergencyRecover())
@@ -755,6 +829,10 @@ electronAPI.on('toggle-mode', async () => {
     addSystemMsg('正在切换到 MMD 模式…')
     await loadCurrentMmd()
 })
+=======
+ipcRenderer.on('switch-model', (e, p) => loadModel(p))
+ipcRenderer.on('reset-position', () => { if (model) { model.x = window.innerWidth * 0.75; model.y = window.innerHeight * 0.65; updateIA() } })
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
 
 // ============ 语音输入（全局快捷键 + 本地 ASR） ============
 let mediaRecorder = null, audioChunks = [], isRecordingVoice = false
@@ -876,7 +954,11 @@ function stopAutoVAD() {
 }
 
 // ============ IPC ============
+<<<<<<< HEAD
 electronAPI.on('voice-settings', (vs) => {
+=======
+ipcRenderer.on('voice-settings', (e, vs) => {
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
     if (vs.lang) setVoiceLang(vs.lang)
     const oldMode = voiceMode
     voiceMode = vs.mode || 'hold'
@@ -891,7 +973,11 @@ electronAPI.on('voice-settings', (vs) => {
     }
 })
 
+<<<<<<< HEAD
 electronAPI.on('voice-key', (pressed, vs) => {
+=======
+ipcRenderer.on('voice-key', (e, pressed, vs) => {
+>>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
     if (vs?.lang) setVoiceLang(vs.lang)
     if (voiceMode === 'auto') return
     isRecordingVoice ? stopVoiceRecording() : startVoiceRecording()
