@@ -1,0 +1,109 @@
+body { margin:0; padding:0; background:transparent; overflow:hidden; user-select:none; -webkit-user-select:none; }
+#canvas { position:fixed; top:0; left:0; width:100%; height:100%; }
+
+/* 桌面小聊天窗 */
+#chat-container { position:fixed; bottom:20px; right:20px; width:360px; max-height:calc(100vh - 40px); z-index:1000; display:flex; flex-direction:column; pointer-events:auto; cursor:move; }
+#chat-container.hidden { display:none; }
+#chat-messages { flex:1; max-height:300px; overflow-y:auto; margin-bottom:8px; scrollbar-width:none; }
+#chat-messages::-webkit-scrollbar { display:none; }
+
+/* 消息（可复制，无头像） */
+.msg { padding:8px 14px; margin-bottom:6px; border-radius:12px; font-size:13px; line-height:1.6; word-wrap:break-word; white-space:pre-wrap; font-family:'Microsoft YaHei',sans-serif; user-select:text; -webkit-user-select:text; cursor:text; transition: opacity 0.5s ease; }
+.msg.user { background:rgba(102,126,234,0.85); color:#fff; margin-left:40px; text-align:right; }
+.msg.assistant { background:rgba(255,255,255,0.9); color:#333; margin-right:40px; }
+.msg.system { background:rgba(200,200,200,0.7); color:#555; font-size:12px; text-align:center; }
+
+/* 截图预览 */
+#screenshot-preview { position:relative; margin-bottom:8px; border-radius:10px; overflow:hidden; border:2px solid rgba(102,126,234,0.5); }
+#screenshot-preview.hidden { display:none; }
+#screenshot-preview img { width:100%; max-height:120px; object-fit:cover; display:block; }
+#screenshot-cancel { position:absolute; top:4px; right:4px; width:24px; height:24px; border-radius:50%; background:rgba(0,0,0,0.6); color:#fff; border:none; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+
+/* 桌面聊天输入 */
+#chat-input-area { display:flex; gap:5px; background:rgba(255,255,255,0.25); backdrop-filter:blur(10px); border-radius:25px; padding:5px; border:1px solid rgba(255,255,255,0.3); }
+#chat-input-area button { width:34px; height:34px; border:none; border-radius:50%; font-size:15px; cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+#btn-open-fullchat { background:rgba(102,126,234,0.3); color:#fff; }
+#btn-open-fullchat:hover { background:rgba(102,126,234,0.5); }
+#btn-mic { background:rgba(239,68,68,0.5); color:#fff; }
+#btn-mic:hover { background:rgba(239,68,68,0.7); }
+#btn-mic.recording { background:rgba(239,68,68,0.9); box-shadow:0 0 8px rgba(239,68,68,0.6); }
+#btn-screenshot-inline { background:rgba(102,126,234,0.3); color:#fff; }
+#btn-screenshot-inline:hover { background:rgba(102,126,234,0.5); }
+#chat-input { flex:1; padding:8px 14px; border:none; border-radius:18px; background:rgba(255,255,255,0.9); font-size:13px; color:#333; outline:none; }
+#chat-input::placeholder { color:#999; }
+#chat-send { width:34px; height:34px; border:none; border-radius:50%; background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; font-size:16px; cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center; padding:0; }
+
+/* 快捷聊天面板（关键：pointer-events:auto 确保可点击） */
+#fullchat-panel { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); width:600px; max-height:calc(100vh - 40px); z-index:1500; display:flex; flex-direction:column; background:rgba(30,30,30,0.95); backdrop-filter:blur(12px); border-radius:16px; border:1px solid rgba(255,255,255,0.15); pointer-events:auto; }
+#fullchat-panel.hidden { display:none; }
+.fullchat-header { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid rgba(255,255,255,0.1); cursor:move; }
+.fullchat-header span { color:#fff; font-size:15px; font-weight:600; }
+.fullchat-header-btns { display:flex; gap:8px; }
+.fullchat-header button { background:none; border:none; color:#999; font-size:18px; cursor:pointer; padding:4px; }
+.fullchat-header button:hover { color:#fff; }
+.fullchat-header button.active { color:#667eea; }
+
+#fullchat-messages { flex:1; overflow-y:auto; padding:12px 16px; scrollbar-width:none; }
+#fullchat-messages::-webkit-scrollbar { display:none; }
+#fullchat-messages .msg { user-select:text; -webkit-user-select:text; cursor:text; }
+#fullchat-messages .msg.user { background:rgba(102,126,234,0.7); margin-left:60px; }
+#fullchat-messages .msg.assistant { background:rgba(255,255,255,0.12); color:#ddd; margin-right:60px; }
+
+/* 附件 */
+#fullchat-attachments { padding:0 16px; }
+#fullchat-attachments.hidden { display:none; }
+#fullchat-attachment-list { display:flex; flex-wrap:wrap; gap:8px; padding:8px 0; }
+.att-item { display:flex; align-items:center; gap:6px; background:rgba(255,255,255,0.08); border-radius:8px; padding:4px 8px; font-size:12px; color:#ccc; }
+.att-thumb { width:40px; height:40px; object-fit:cover; border-radius:4px; }
+.att-doc { font-size:12px; }
+.att-rm { background:none; border:none; color:#999; font-size:14px; cursor:pointer; padding:0 2px; }
+.att-rm:hover { color:#f55; }
+
+/* 快捷聊天输入 */
+#fullchat-input-area { display:flex; gap:6px; padding:12px 16px; border-top:1px solid rgba(255,255,255,0.1); }
+#fullchat-input-area button { width:36px; height:36px; border:none; border-radius:50%; font-size:16px; cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+#btn-upload { background:rgba(255,255,255,0.1); color:#ccc; }
+#btn-upload:hover { background:rgba(255,255,255,0.2); }
+#btn-mic-fullchat { background:rgba(239,68,68,0.4); color:#fff; }
+#btn-mic-fullchat:hover { background:rgba(239,68,68,0.6); }
+#btn-mic-fullchat.recording { background:rgba(239,68,68,0.9); box-shadow:0 0 8px rgba(239,68,68,0.6); }
+#fullchat-input { flex:1; padding:8px 14px; border:1px solid rgba(255,255,255,0.15); border-radius:18px; background:rgba(255,255,255,0.08); color:#fff; font-size:13px; outline:none; }
+#fullchat-input::placeholder { color:#666; }
+#fullchat-send { width:36px; height:36px; border:none; border-radius:50%; background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; font-size:16px; cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center; padding:0; }
+
+/* 设置面板 */
+#settings-panel { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:400px; max-height:80vh; z-index:2000; background:rgba(30,30,30,0.95); backdrop-filter:blur(12px); border-radius:16px; border:1px solid rgba(255,255,255,0.15); overflow-y:auto; pointer-events:auto; scrollbar-width:none; }
+#settings-panel::-webkit-scrollbar { display:none; }
+#settings-panel.hidden { display:none; }
+.settings-content { padding:20px; }
+.settings-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+.settings-header h2 { color:#fff; font-size:18px; margin:0; }
+.settings-header button { background:none; border:none; color:#999; font-size:20px; cursor:pointer; }
+.settings-header button:hover { color:#fff; }
+.settings-section { margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.1); }
+.settings-section h3 { color:#ddd; font-size:14px; margin:0 0 8px; }
+.info-text { color:#aaa; font-size:12px; padding:8px 12px; background:rgba(255,255,255,0.05); border-radius:8px; word-break:break-all; }
+.hint { color:#777; font-size:11px; margin:6px 0; }
+.checkbox-label { display:flex; align-items:center; gap:8px; color:#ccc; font-size:13px; margin:8px 0; cursor:pointer; }
+.checkbox-label input { accent-color:#667eea; }
+.form-group { margin:10px 0; }
+.form-group label { display:block; color:#aaa; font-size:12px; margin-bottom:4px; }
+.form-group input { width:100%; padding:8px 12px; border:1px solid rgba(255,255,255,0.15); border-radius:8px; background:rgba(255,255,255,0.08); color:#fff; font-size:13px; outline:none; box-sizing:border-box; }
+.form-group input:focus { border-color:#667eea; }
+.form-group select { width:100%; padding:8px 12px; border:1px solid rgba(255,255,255,0.15); border-radius:8px; background:rgba(255,255,255,0.08); color:#fff; font-size:13px; outline:none; box-sizing:border-box; }
+.form-group select:focus { border-color:#667eea; }
+.form-group select option { background:#2a2a3a; color:#fff; }
+.model-select-row { display:flex; gap:8px; align-items:center; }
+.model-select-row select { flex:1; }
+.btn-icon { padding:8px 10px; border:1px solid rgba(255,255,255,0.15); border-radius:8px; background:rgba(255,255,255,0.08); color:#ccc; font-size:13px; cursor:pointer; flex-shrink:0; }
+.btn-icon:hover { background:rgba(255,255,255,0.15); color:#fff; }
+.btn-icon.spinning { animation:spin 1s linear infinite; }
+@keyframes spin { from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
+.btn-save { width:100%; padding:10px; border:none; border-radius:10px; background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; font-size:14px; font-weight:600; cursor:pointer; }
+.btn-save:hover { opacity:0.9; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.spinning { display:inline-block; animation:spin 0.8s linear infinite; }
+
+/* 气泡 */
+#bubble-container { position:fixed; top:0; left:0; z-index:999; display:none; pointer-events:none; }
+#bubble-text { position:relative; display:inline-block; min-width:140px; max-width:280px; padding:16px 22px; background:linear-gradient(145deg,#fff,#f0f4f8,#e3edf7); border:2.5px solid #7eb3e0; border-radius:20px; font-family:'Microsoft YaHei',sans-serif; font-size:14px; font-weight:600; color:#2c5aa0; line-height:1.6; pointer-events:none; }

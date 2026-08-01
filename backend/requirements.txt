@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+pydantic
+python-multipart
+openai
+jieba
+rank_bm25
+httpx
+pywebview
+websockets
+faster-whisper
+soundfile
+numpy
+opencc-python-reimplemented
