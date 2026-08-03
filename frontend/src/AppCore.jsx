@@ -101,14 +101,10 @@ import SaveLoadPage from './pages/SaveLoadPage';
 import LogPage from './pages/LogPage';
 import TitlePage from './pages/TitlePage';
 import ChatPage from './pages/ChatPage';
-<<<<<<< HEAD
 import { BUNDLED_MODS, MERGED_INTO_CORE_IDS } from './bundled_mods';
 // 已并入主程序的内置功能（原为独立插件，现随主包编译）
 import { installScriptMode } from './builtin/scriptModeDLC';
 import { installSpriteMode } from './builtin/spriteModeDLC';
-=======
-import { BUNDLED_MODS } from './bundled_mods';
->>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
 import { logoutUser, getCurrentUser, hashPassword } from './utils/auth';
 import AccountTab from './components/settings/AccountTab';
 import LoginCustomizeTab from './components/settings/LoginCustomizeTab';
@@ -210,11 +206,7 @@ const DEFAULT_SETTINGS = {
   ttsUrlTemplate: 'http://127.0.0.1:9880/tts?text={text}&text_lang={lang}&ref_audio_path={ref_audio}&prompt_text={ref_text}&prompt_lang={ref_lang}',
   ttsLanguage: 'zh', ttsVolume: 1.0, bgmVolume: 0.3, bgmMode: 'sequential', enableBgmToast: false,
   // ✨ 新增手机端模式开关状态与缩放比例
-<<<<<<< HEAD
   ttsBuiltIn: false, ttsVoiceId: '', enableMobileUI: false, mobileUIScale: 1.0,
-=======
-  ttsMobileMode: false, enableMobileUI: false, mobileUIScale: 1.0,
->>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
   storySpriteScale: 1.0, storySpriteX: 0, storySpriteY: 0,
   live2dScale: 0.2, live2dX: 0, live2dY: 0, titleLive2dScale: 0.2, titleLive2dX: 0, titleLive2dY: 0,
   live2dResolution: window.devicePixelRatio || 1, // ✨ 新增：模型渲染分辨率精度
@@ -452,7 +444,6 @@ export default function AppCore({ router }) {
           };
           localStorage.setItem('gwc_data_fingerprint', JSON.stringify(fingerprint));
         } catch {}
-<<<<<<< HEAD
         loadOkRef.current = true; // 加载成功，允许后续回写
       } catch(e) {
         console.error("唤醒失败（后端不可达或未授权）", e);
@@ -470,9 +461,6 @@ export default function AppCore({ router }) {
           }
         }, 1500);
       } finally { setIsCoreLoading(false); }
-=======
-      } catch(e) { console.error("唤醒失败", e); } finally { setIsCoreLoading(false); }
->>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
     };
     loadEverything();
   }, []);
@@ -496,7 +484,6 @@ export default function AppCore({ router }) {
   }, []);
 
   // ✨ 数据变动实时写入黑盒（跳过首次加载时的无变化写回，省 6 个 PUT 请求）
-<<<<<<< HEAD
   // canWrite: 必须“加载成功”后才允许回写。加载失败（后端不可达/未登录）时
   // loadOkRef 为 false，禁止一切回写，防止空数据覆盖服务端存档。
   const initialLoadDoneRef = useRef(false);
@@ -509,16 +496,6 @@ export default function AppCore({ router }) {
   useEffect(() => { if (canWrite()) saveCoreData('live2d_quicksave_v35', quickSaveData); }, [quickSaveData]);
   useEffect(() => { if (canWrite()) saveCoreData('live2d_autosave_v35', autoSaveData); }, [autoSaveData]);
   useEffect(() => { if (canWrite()) saveCoreData('live2d_memos_v35', memos); }, [memos]);
-=======
-  const initialLoadDoneRef = useRef(false);
-  useEffect(() => { if (!isCoreLoading) initialLoadDoneRef.current = true; }, [isCoreLoading]);
-  useEffect(() => { if (initialLoadDoneRef.current) saveCoreData('live2d_settings_v35', settings); }, [settings]);
-  useEffect(() => { if (initialLoadDoneRef.current) saveCoreData('live2d_sessions_v35', sessions); }, [sessions]);
-  useEffect(() => { if (initialLoadDoneRef.current) saveCoreData('live2d_saves_v35', saveSlots); }, [saveSlots]);
-  useEffect(() => { if (initialLoadDoneRef.current) saveCoreData('live2d_quicksave_v35', quickSaveData); }, [quickSaveData]);
-  useEffect(() => { if (initialLoadDoneRef.current) saveCoreData('live2d_autosave_v35', autoSaveData); }, [autoSaveData]);
-  useEffect(() => { if (initialLoadDoneRef.current) saveCoreData('live2d_memos_v35', memos); }, [memos]);
->>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
   const [isMemoOpen, setIsMemoOpen] = useState(false);
   const [newMemoText, setNewMemoText] = useState('');
   const [newMemoDate, setNewMemoDate] = useState('');
@@ -724,7 +701,6 @@ export default function AppCore({ router }) {
     const initMods = async () => {
         try {
             // 1. 加载已存储的插件状态（优先从批量响应获取，省 1 个请求）
-<<<<<<< HEAD
             let list = modsList.length > 0 ? modsList : (await loadModsFromDB() || []);
 
             // 1.5 清理【已并入主程序】的旧内置插件条目。
@@ -738,9 +714,6 @@ export default function AppCore({ router }) {
                     console.log(`[内置化] 已移除旧插件条目: ${m.name}（功能已并入程序主体）`);
                 });
             }
-=======
-            const list = modsList.length > 0 ? modsList : (await loadModsFromDB() || []);
->>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
 
             // 2. 将内置插件合并到列表（首次运行时自动注册为启用）
             const existingIds = new Set(list.map(m => m.id));
@@ -768,7 +741,6 @@ export default function AppCore({ router }) {
                 await new Promise(resolve => { apiScript.onload = resolve; apiScript.onerror = resolve; });
             }
 
-<<<<<<< HEAD
             // 2.6 启动【已并入主程序】的内置功能（剧情IDE / 立绘模式）。
             // 它们原先作为插件由 <script src> 异步加载，网络往返天然给了 API 客户端
             // 就绪时间；现在改为同步调用，必须显式等待依赖就绪，否则会抢跑。
@@ -786,8 +758,6 @@ export default function AppCore({ router }) {
             try { installSpriteMode(); } catch (e) { console.error('[内置功能] 立绘模式启动失败:', e); }
             try { installScriptMode(); } catch (e) { console.error('[内置功能] 剧情IDE 启动失败:', e); }
 
-=======
->>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
             // 3. 注入启用的内置插件（通过 script src 加载）
             list.forEach(mod => {
                 if (mod.bundled && mod.enabled) {
@@ -1002,7 +972,13 @@ export default function AppCore({ router }) {
         fetchPayload = { model: settings.aiModel || 'gpt-3.5-turbo', messages: enrichedMessages, stream: true, temperature: settings.aiTemperature };
       }
       const res = await fetch(fetchUrl, { method: 'POST', headers: fetchHeaders, body: JSON.stringify(fetchPayload) });
-      if (!res.ok) { await fetch('/api/bridge/push', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ task_id, error: `LLM 请求失败: ${res.status}` }) }); return; }
+      if (!res.ok) {
+        let errDetail = `HTTP ${res.status}`;
+        try { const b = await res.text(); if (b) errDetail = b.slice(0, 300); } catch {}
+        const explain = { 400:'请求格式错误', 401:'API Key无效', 402:'余额不足', 403:'无权访问', 404:'模型不存在', 408:'超时', 429:'请求频繁/配额/并发', 500:'服务端错误', 502:'网关错误', 503:'服务不可用', 504:'网关超时' };
+        await fetch('/api/bridge/push', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ task_id, error: `[LLM 错误 ${res.status}] ${explain[res.status]||''} — ${errDetail}` }) });
+        return;
+      }
       const reader = res.body.getReader();
       const decoder = new TextDecoder('utf-8');
       let buffer = '';
@@ -2263,34 +2239,24 @@ export default function AppCore({ router }) {
   useEffect(() => {
     if (!settings.enableAutoSave || appMode !== 'game' || !activeSession || activeSession.messages.length === 0) return;
     const intervalId = setInterval(() => {
-      const data = { date: new Date().toLocaleString(), messages: activeSession.messages, title: `[${settings.aiName}] 自动存档 (Auto Save)` };
+      const data = { date: new Date().toLocaleString(), messages: activeSession.messages.filter(m => !m.isError), title: `[${settings.aiName}] 自动存档 (Auto Save)` };
       setAutoSaveData(data); showToast('🔄 已自动保存游戏进度至 AUTO 槽位', 'info', 2000);
     }, settings.autoSaveInterval * 60 * 1000);
     return () => clearInterval(intervalId);
   }, [settings.enableAutoSave, settings.autoSaveInterval, appMode, activeSession, showToast, settings.aiName]);
 
   // ✨ 聊天数据自动备份（默认开启，每10分钟备份一次到 userdata/auto_backup/）
-<<<<<<< HEAD
   // 用 ref 保存最新数据快照：定时器回调读取 ref，因此依赖数组无需包含 sessions/settings，
   // 否则每次数据变动都会 clear/重建定时器，导致持续聊天期间备份永远触发不了。
   const backupDataRef = useRef({});
   backupDataRef.current = { settings, sessions, saveSlots, quickSaveData, autoSaveData, memos };
-=======
->>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
   useEffect(() => {
     if (!settings.enableAutoChatBackup || isCoreLoading) return;
     const intervalMs = (settings.autoChatBackupInterval || 10) * 60 * 1000;
     const intervalId = setInterval(async () => {
       try {
         const mid = getActiveMirrorId();
-<<<<<<< HEAD
         const content = { ...backupDataRef.current, timestamp: new Date().toISOString() };
-=======
-        const content = {
-          settings, sessions, saveSlots, quickSaveData, autoSaveData, memos,
-          timestamp: new Date().toISOString()
-        };
->>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
         await fetch('/api/auto-backup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -2299,11 +2265,7 @@ export default function AppCore({ router }) {
       } catch (e) { console.warn('[自动备份] 失败:', e.message); }
     }, intervalMs);
     return () => clearInterval(intervalId);
-<<<<<<< HEAD
   }, [settings.enableAutoChatBackup, settings.autoChatBackupInterval, isCoreLoading]);
-=======
-  }, [settings.enableAutoChatBackup, settings.autoChatBackupInterval, isCoreLoading, settings, sessions, saveSlots, quickSaveData, autoSaveData, memos]);
->>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
 
   const handleAutoSaveSButton = () => {
     let targetId = 1; while (saveSlots[targetId] && targetId <= 100) targetId++;
@@ -2312,7 +2274,7 @@ export default function AppCore({ router }) {
     setSaveSlots(prev => ({ ...prev, [targetId]: newSave })); setSlPage(Math.ceil(targetId / 10)); setSlMode('save'); setIsSaveLoadUIOpen(true); setEditingSlotId(targetId); setEditSaveName(defaultTitle);
   };
 
-  const handleQuickSave = () => { const data = { date: new Date().toLocaleString(), messages: activeSession?.messages || [], title: `[${settings.aiName}] 快捷系统存档 (Quick Save)` }; setQuickSaveData(data); showToast('✨ 已完成快捷保存 (Quick Save)', 'success'); };
+  const handleQuickSave = () => { const data = { date: new Date().toLocaleString(), messages: (activeSession?.messages || []).filter(m => !m.isError), title: `[${settings.aiName}] 快捷系统存档 (Quick Save)` }; setQuickSaveData(data); showToast('✨ 已完成快捷保存 (Quick Save)', 'success'); };
 
   const handleQuickLoad = () => {
     if (!quickSaveData) { showToast('当前没有快捷存档数据！', 'error'); return; }
@@ -2329,9 +2291,9 @@ export default function AppCore({ router }) {
     if (slMode === 'save') {
       let defaultTitle = `[${settings.aiName}] 存档`;
       if (saveSlots[slotId]) {
-        setConfirmDialog({ isOpen: true, text: `确定要覆盖 No.${String(slotId).padStart(3, '0')} 存档吗？`, onConfirm: () => { const newSave = { id: slotId, title: defaultTitle, date: new Date().toLocaleString(), messages: activeSession.messages || [] }; setSaveSlots(prev => ({ ...prev, [slotId]: newSave })); setConfirmDialog({ isOpen: false, text: '', onConfirm: null }); setEditingSlotId(slotId); setEditSaveName(defaultTitle); } });
+        setConfirmDialog({ isOpen: true, text: `确定要覆盖 No.${String(slotId).padStart(3, '0')} 存档吗？`, onConfirm: () => { const newSave = { id: slotId, title: defaultTitle, date: new Date().toLocaleString(), messages: (activeSession.messages || []).filter(m => !m.isError) }; setSaveSlots(prev => ({ ...prev, [slotId]: newSave })); setConfirmDialog({ isOpen: false, text: '', onConfirm: null }); setEditingSlotId(slotId); setEditSaveName(defaultTitle); } });
       } else {
-        const newSave = { id: slotId, title: defaultTitle, date: new Date().toLocaleString(), messages: activeSession.messages || [] }; setSaveSlots(prev => ({ ...prev, [slotId]: newSave })); setEditingSlotId(slotId); setEditSaveName(defaultTitle);
+        const newSave = { id: slotId, title: defaultTitle, date: new Date().toLocaleString(), messages: (activeSession.messages || []).filter(m => !m.isError) }; setSaveSlots(prev => ({ ...prev, [slotId]: newSave })); setEditingSlotId(slotId); setEditSaveName(defaultTitle);
       }
     } else {
       const data = saveSlots[slotId]; if (!data) return; 
@@ -2340,11 +2302,8 @@ export default function AppCore({ router }) {
   };
 
   const handleSaveNameConfirm = () => { if (editingSlotId !== null && saveSlots[editingSlotId]) { setSaveSlots(prev => ({ ...prev, [editingSlotId]: { ...prev[editingSlotId], title: editSaveName.trim() || `[${settings.aiName}] 存档` } })); } setEditingSlotId(null); };
-<<<<<<< HEAD
   // 供 SaveLoadPage 使用：直接以传入的名称重命名指定档位（该页使用非受控输入框）
   const handleRenameSlotByValue = (slotId, name) => { if (slotId != null && saveSlots[slotId]) { setSaveSlots(prev => ({ ...prev, [slotId]: { ...prev[slotId], title: (name || '').trim() || `[${settings.aiName}] 存档` } })); } setEditingSlotId(null); };
-=======
->>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
 
   useEffect(() => { if (editingSlotId && editInputRef.current) { editInputRef.current.focus(); editInputRef.current.select(); } }, [editingSlotId]);
 
@@ -2749,24 +2708,15 @@ export default function AppCore({ router }) {
           .replace('{text}', encodeURIComponent(text.trim()))
           .replace('{lang}', settings.ttsLanguage);
 
-<<<<<<< HEAD
       if (!settings.ttsRefAudio) {
           // 未填参考音频：剥离相关参数，让服务端使用自身配置的默认音色
           // （内置配音由 tts_infer.yaml 指定；外部服务由其自身配置决定）
-=======
-      if (settings.ttsMobileMode) {
-          // ✨ 手机端模式：利用正则彻底将 URL 中的本地参考音频参数剥离，强迫后端使用 start.py 的默认配置
->>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
           url = url.replace(/([&?])ref_audio_path=\{ref_audio\}/g, '')
                    .replace(/([&?])prompt_text=\{ref_text\}/g, '')
                    .replace(/([&?])prompt_lang=\{ref_lang\}/g, '')
                    .replace(/\?&/, '?').replace(/&$/, '');
       } else {
-<<<<<<< HEAD
           // 已填参考音频：按原样带入，用于指定音色/克隆
-=======
-          // 电脑端模式：按原样带入本地客户端填写的参考音频
->>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
           url = url.replace('{ref_audio}', encodeURIComponent(settings.ttsRefAudio || ''))
                    .replace('{ref_text}', encodeURIComponent(settings.ttsRefText || ''))
                    .replace('{ref_lang}', settings.ttsRefLang || 'zh');
@@ -3002,7 +2952,13 @@ export default function AppCore({ router }) {
       }
 
       const response = await fetch(fetchUrl, { method: 'POST', headers: fetchHeaders, body: JSON.stringify(fetchBody) });
-      if (!response.ok) throw new Error(`HTTP ${response.status} 错误`);
+      if (!response.ok) {
+        let msg = `HTTP ${response.status}`;
+        try { const ed = await response.json(); msg = ed?.error?.message || ed?.msg || msg; } catch {}
+        const explain = { 400: '请求格式错误', 401: 'API Key 无效', 402: '账户余额不足', 403: '无权访问模型', 404: '模型不存在', 408: '请求超时', 429: '请求过于频繁 / 配额不足 / 并发过高', 500: 'LLM 服务端错误', 502: 'LLM 网关错误', 503: 'LLM 服务暂不可用', 504: 'LLM 网关超时' };
+        const tip = explain[response.status] || '';
+        throw new Error(`[LLM 错误 ${response.status}]${tip ? ' ' + tip : ''}${msg !== `HTTP ${response.status}` ? '（' + msg + '）' : ''}`);
+      }
 
       if (settings.enableStreaming) {
         let networkDone = false, networkError = null, fullContentBuffer = "", displayedContent = ""; 
@@ -3053,8 +3009,13 @@ export default function AppCore({ router }) {
                       break;
                     }
                     if (data.choices?.[0]?.delta?.content) {
-                       const deltaText = data.choices[0].delta.content; 
-                       fullContentBuffer += deltaText; 
+                       const deltaText = data.choices[0].delta.content;
+                       // 检测后端代理返回的 LLM 错误（[LLM 错误 4XX]...）
+                       if (deltaText.startsWith('[LLM 错误') || deltaText.startsWith('[代理异常]')) {
+                         networkError = new Error(deltaText);
+                         break;
+                       }
+                       fullContentBuffer += deltaText;
                        
                        // ✨ 核心修复：彻底将 TTS 切片解析逻辑与 <ADD_MEMO> 隔离
                        const currentMemoIdx = fullContentBuffer.indexOf('<ADD_MEMO');
@@ -3457,11 +3418,7 @@ export default function AppCore({ router }) {
     // 存档函数
     handleSaveToSlot: handleSlotClick, handleLoadFromSlot: handleSlotClick,
     handleDeleteSlot: (id) => { setConfirmDialog({ isOpen: true, text: `确定要删除 No.${String(id).padStart(3, '0')} 存档吗？`, onConfirm: () => { setSaveSlots(prev => { const next = {...prev}; delete next[id]; return next; }); setConfirmDialog({ isOpen: false, text: '', onConfirm: null }); showToast('存档已删除', 'success'); } }); },
-<<<<<<< HEAD
     handleRenameSlot: handleRenameSlotByValue,
-=======
-    handleRenameSlot: handleSaveNameConfirm,
->>>>>>> 64b6d65c5a98416f5db9608a4493435ec5aca2bf
     editingSlotId, setEditingSlotId,
     // 备份函数
     handleExportFullBackup, handleImportFullBackup: handleSmartImportBackup, handleFactoryReset: handleFirstResetClick,

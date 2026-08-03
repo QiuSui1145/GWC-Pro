@@ -77,3 +77,64 @@ if (typeof window !== 'undefined' && window.EventSource && !window.__gwcESPatche
   window.EventSource = Patched;
   window.__gwcESPatched = true;
 }
+
+// ---- patch XMLHttpRequest ----
+// PIXI.js / Live2D 等第三方库使用 XHR 加载模型文件，不走 fetch，
+// 必须在 open/send 层注入 Authorization 头（cookie 在部分浏览器环境下不可靠）。
+if (typeof window !== 'undefined' && window.XMLHttpRequest && !window.__gwcXhrPatched) {
+  const XHR = window.XMLHttpRequest;
+  const _open = XHR.prototype.open;
+  const _send = XHR.prototype.send;
+  XHR.prototype.open = function (method, url, ...rest) {
+    this.__gwcUrl = typeof url === 'string' ? url : String(url || '');
+    this.__gwcMethod = method;
+    return _open.call(this, method, url, ...rest);
+  };
+  XHR.prototype.send = function (...args) {
+    try {
+      const url = this.__gwcUrl || '';
+      if (isBackendUrl(url)) {
+        const token = getToken();
+        if (token) {
+          this.setRequestHeader('Authorization', 'Bearer ' + token);
+        }
+      }
+    } catch {}
+    return _send.apply(this, args);
+  };
+  window.__gwcXhrPatched = true;
+}
+
+// ---- patch HTMLImageElement / HTMLAudioElement src ----
+// 浏览器原生 <img>/<audio>/CSS url() 加载完全不走 JS 网络 API，
+// 无法设请求头，只能在 URL 上挂 ?_token= 查询参数。
+if (typeof window !== 'undefined' && !window.__gwcMediaPatched) {
+  const _imgSrcDesc = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src');
+  const _audioSrcDesc = Object.getOwnPropertyDescriptor(HTMLAudioElement.prototype, 'src');
+
+  function patchSrcSetter(proto, desc, tag) {
+    if (!desc || !desc.set) return;
+    const _set = desc.set;
+    Object.defineProperty(proto, 'src', {
+      get: desc.get,
+      set: function (url) {
+        try {
+          if (typeof url === 'string' && isBackendUrl(url) && url.includes('/api/')) {
+            const token = getToken();
+            if (token && !url.includes('_token=')) {
+              const sep = url.includes('?') ? '&' : '?';
+              url = url + sep + '_token=' + encodeURIComponent(token);
+            }
+          }
+        } catch {}
+        return _set.call(this, url);
+      },
+      configurable: true,
+      enumerable: true,
+    });
+  }
+
+  if (_imgSrcDesc) patchSrcSetter(HTMLImageElement.prototype, _imgSrcDesc, 'IMG');
+  if (_audioSrcDesc) patchSrcSetter(HTMLAudioElement.prototype, _audioSrcDesc, 'AUDIO');
+  window.__gwcMediaPatched = true;
+}

@@ -1,0 +1,8 @@
+{
+    "tag_name": "v7.21",
+    "target_commitish": "main",
+    "name": "v7.21 - MMD 演出包 + 镜头动画 + 音频同步",
+    "body": "## 🎥 MMD 3D 桌宠重大更新\n\n### 完整 MMD 演出包支持\n- 🎬 骨骼动画 + 镜头 VMD + 音频 (.wav) 同步播放\n- 🎥 镜头 VMD 自动解析与后台驱动，不干扰桌宠正交渲染\n- 🔊 Web Audio API 音频播放，与骨骼动画实时同步\n- 📁 共享动作库 `mmd_models/_motions/` 支持子目录演出包（自动配对镜头/音频文件）\n\n### 🦴 骨骼物理托盘控制\n- 托盘菜单新增「骨骼物理」复选框，双向同步设置面板\n\n### 🔧 稳定性修复\n- WebGL 上下文不复毁（修复 Live2D↔MMD 切换后模型不渲染）\n- MMD 模型位置按模型路径分别保存（切换模型不再飞出屏幕）\n- 托盘菜单新增「重启桌宠」选项（自动关闭旧 cmd 窗口）\n\n### 🛡️ 安全加固\n- 全栈 HMAC 签名 Token 认证 + Cookie 同步 + Authorization 头\n- 路径穿越防护 + 命令注入修复 + CORS 收敛到本地来源\n\n### 其他\n- 🎨 暗色模式（跟随系统 / 亮色 / 暗色）\n- 🎙️ 内置配音（GPT-SoVITS）按需安装向导\n- 🔌 剧情 IDE 拓展包 + 立绘模式拓展包合并为内核模块\n- 📝 版本号更新至 7.21\n\n---\n\n### 安装说明\n1. 下载并解压 Release 包\n2. 安装 [Node.js](https://nodejs.org/en/download)\n3. 双击 `启动全栈环境.bat`\n4. 访问 http://127.0.0.1:5201/app\n\n> Python runtime、TTS 模型、ASR 模型、MMD/Live2D 模型需按首次启动引导配置。",
+    "draft": false,
+    "prerelease": false
+}

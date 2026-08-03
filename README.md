@@ -6,7 +6,7 @@
 [![Node](https://img.shields.io/badge/node-18+-green.svg)](https://nodejs.org/)
 [![React](https://img.shields.io/badge/react-19-blue.svg)](https://react.dev/)
 [![Electron](https://img.shields.io/badge/electron-28-blue.svg)](https://www.electronjs.org/)
-[![Version](https://img.shields.io/badge/version-7.21-orange.svg)](https://github.com/QiuSui1145/GWC-Pro/releases)
+[![Version](https://img.shields.io/badge/version-7.22-orange.svg)](https://github.com/QiuSui1145/GWC-Pro/releases)
 
 <p align="center">
   <b>✨ 交流 QQ 群：1083739889 ✨</b><br>
@@ -403,6 +403,24 @@ pip install jieba rank_bm25
 ---
 
 ## Changelog / 更新日志
+
+### v7.22 (2026-08-01)
+
+**资源加载鉴权修复：**
+- 🔗 后端 Referer 同源放行：CSS `background-image`、`<img>`、`<audio>` 等原生资源加载免 token
+- 🔧 `authFetch.js` 全面覆盖：`fetch` + `EventSource` + `XMLHttpRequest` + `HTMLImageElement.src` + `HTMLAudioElement.src`
+- 🛡️ 仅 GET/HEAD 的只读资源请求走 Referer 校验，写操作仍须完整认证
+
+**LLM 错误友好展示：**
+- 📋 13 种 HTTP 错误码 → 中文解释映射（429→请求频繁/配额/并发，402→余额不足...）
+- 💬 错误信息直接显示在聊天框，红色边框标记，自动提取上游 API 返回的详细原因
+- 🗑️ `isError` 消息不计入存档/快存/自动存档
+
+**MMD 演出包兼容性完善：**
+- 🎥 镜头 VMD 后台驱动，不干扰正交渲染——模型位置/大小/交互全保持不变
+- 🔊 动作 + 音频同步播放，Web Audio API 实时解码
+- 📍 模型位置按路径分别保存（切模型不再飞出屏幕）
+- 🔄 WebGL 上下文不复毁（修复 Live2D↔MMD 反复切换后模型不渲染）
 
 ### v7.21 (2026-08-01)
 
