@@ -1,0 +1,148 @@
+@import "tailwindcss";
+
+/* ==========================================================
+   全局页面 / 面板切换过渡动画
+   ----------------------------------------------------------
+   - Tailwind v4 无内置 animate-fade-in，这里统一定义
+   - --gwc-anim-rate : 全局动画速率（视觉设置中可调）
+                       0.5x = 慢一倍, 2x = 快一倍
+   - .gwc-page-*    : 全屏页面切换（进入动画，key 驱动重放）
+   - .gwc-overlay-* : 弹窗 / 遮罩层（进出场成对动画）
+   - 尊重系统"减少动态效果"设置
+   ========================================================== */
+
+:root {
+  --gwc-anim-rate: 1;
+}
+
+@theme {
+  --animate-fade-in: gwc-fade-in 0.32s ease-out backwards;
+  --animate-fade-in-up: gwc-fade-in-up 0.36s cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+  --animate-fade-in-down: gwc-fade-in-down 0.36s cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+  --animate-zoom-in: gwc-zoom-in 0.28s cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+  --animate-slide-up: gwc-slide-up 0.34s cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+  --animate-overlay-in: gwc-overlay-in 0.26s ease-out backwards;
+  --animate-reveal: gwc-reveal 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+}
+
+/* ---------- keyframes ---------- */
+@keyframes gwc-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes gwc-fade-in-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes gwc-fade-in-down {
+  from { opacity: 0; transform: translateY(-14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes gwc-zoom-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes gwc-slide-up {
+  from { opacity: 0; transform: translateY(6%); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes gwc-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes gwc-overlay-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+@keyframes gwc-zoom-out {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(0.96); }
+}
+
+/* 左右横移（设置页等选项卡切换用） */
+@keyframes gwc-slide-from-right {
+  from { opacity: 0; transform: translateX(48px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes gwc-slide-from-left {
+  from { opacity: 0; transform: translateX(-48px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* 从窗口中心向外扩散（clip-path 圆形展开） */
+@keyframes gwc-reveal {
+  from { opacity: 0; clip-path: circle(0% at 50% 50%); }
+  30%  { opacity: 1; }
+  to   { opacity: 1; clip-path: circle(140% at 50% 50%); }
+}
+
+@keyframes gwc-reveal-scale {
+  from { opacity: 0; transform: scale(0.88); filter: blur(6px); }
+  40%  { opacity: 1; }
+  to   { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+
+/* ---------- 弹窗遮罩层 ---------- */
+.gwc-overlay-in {
+  animation: gwc-overlay-in calc(0.24s / var(--gwc-anim-rate)) ease-out backwards;
+}
+
+.gwc-overlay-out {
+  animation: gwc-overlay-out calc(0.2s / var(--gwc-anim-rate)) ease-in both;
+}
+
+/* ---------- 弹窗内容 ---------- */
+.gwc-modal-in {
+  animation: gwc-zoom-in calc(0.26s / var(--gwc-anim-rate)) cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+}
+
+.gwc-modal-out {
+  animation: gwc-zoom-out calc(0.18s / var(--gwc-anim-rate)) ease-in both;
+}
+
+/* ---------- 全屏页面切换 ---------- */
+.gwc-page-in {
+  animation: gwc-fade-in calc(0.3s / var(--gwc-anim-rate)) ease-out backwards;
+}
+
+/* 从中心向外扩散（登录 → 主界面等重大场景切换） */
+.gwc-page-reveal {
+  animation: gwc-reveal calc(0.65s / var(--gwc-anim-rate)) cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+}
+
+/* 标题画面进场：缩放 + 模糊消散 */
+.gwc-title-in {
+  animation: gwc-reveal-scale calc(0.5s / var(--gwc-anim-rate)) cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+}
+
+/* ---------- 面板 / 选项卡左右横移切换 ---------- */
+.gwc-panel-in {
+  animation: gwc-slide-from-right calc(0.34s / var(--gwc-anim-rate)) cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+}
+
+.gwc-panel-left-in {
+  animation: gwc-slide-from-left calc(0.34s / var(--gwc-anim-rate)) cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+}
+
+.gwc-panel-right-in {
+  animation: gwc-slide-from-right calc(0.34s / var(--gwc-anim-rate)) cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+}
+
+/* ---------- 系统减少动态效果 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .gwc-overlay-in, .gwc-overlay-out, .gwc-modal-in, .gwc-modal-out,
+  .gwc-page-in, .gwc-page-reveal, .gwc-title-in,
+  .gwc-panel-in, .gwc-panel-left-in, .gwc-panel-right-in,
+  .animate-fade-in, .animate-fade-in-up, .animate-fade-in-down,
+  .animate-zoom-in, .animate-slide-up, .animate-overlay-in, .animate-reveal {
+    animation: none !important;
+  }
+}

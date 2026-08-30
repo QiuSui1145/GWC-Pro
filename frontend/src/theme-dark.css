@@ -1,0 +1,147 @@
+/* ==========================================================
+   深色模式
+   ----------------------------------------------------------
+   本项目 UI 大量使用 Tailwind 任意值硬编码米色系配色
+   （#fdfaf5 底 / #e6d5b8 边框 / #4a4036 文字 …），并未使用
+   CSS 变量，内置的剧情IDE、立绘模式等模块还带有内联样式。
+   因此这里采用「按调色板精确重映射」的方式：以 html[data-theme="dark"]
+   为作用域覆盖这些具体色值，可一次覆盖主程序与内置模块，
+   且不改动任何业务代码。
+   ========================================================== */
+
+html[data-theme="dark"] {
+  --gwc-bg:        #1a1b1e;  /* 主背景 */
+  --gwc-panel:     #232529;  /* 面板/卡片 */
+  --gwc-panel-2:   #2b2e33;  /* 次级面板、输入框 */
+  --gwc-border:    #3a3e45;  /* 边框 */
+  --gwc-border-2:  #4a4f57;  /* 次级边框 */
+  --gwc-text:      #e8e6e3;  /* 主文字 */
+  --gwc-text-2:    #b3aea7;  /* 次级文字 */
+  --gwc-text-3:    #8b867f;  /* 弱化文字 */
+  color-scheme: dark;        /* 让滚动条/表单控件跟随深色 */
+}
+
+/* ---------- 背景 ---------- */
+html[data-theme="dark"] .bg-\[\#fdfaf5\],
+html[data-theme="dark"] .bg-\[\#FDFAF5\] { background-color: var(--gwc-bg) !important; }
+html[data-theme="dark"] .bg-\[\#e8decb\],
+html[data-theme="dark"] .bg-\[\#efe6d5\] { background-color: var(--gwc-panel-2) !important; }
+html[data-theme="dark"] .bg-white,
+html[data-theme="dark"] .bg-white\/60,
+html[data-theme="dark"] .bg-white\/70,
+html[data-theme="dark"] .bg-white\/80,
+html[data-theme="dark"] .bg-white\/90,
+html[data-theme="dark"] .bg-white\/50 { background-color: var(--gwc-panel) !important; }
+html[data-theme="dark"] .bg-slate-50,
+html[data-theme="dark"] .bg-slate-100,
+html[data-theme="dark"] .bg-gray-50,
+html[data-theme="dark"] .bg-gray-100 { background-color: var(--gwc-panel-2) !important; }
+
+/* ---------- 文字 ---------- */
+html[data-theme="dark"] .text-\[\#4a4036\] { color: var(--gwc-text) !important; }
+html[data-theme="dark"] .text-\[\#7a6b5d\] { color: var(--gwc-text-2) !important; }
+html[data-theme="dark"] .text-\[\#a89578\] { color: var(--gwc-text-3) !important; }
+html[data-theme="dark"] .text-slate-500,
+html[data-theme="dark"] .text-slate-600,
+html[data-theme="dark"] .text-gray-500,
+html[data-theme="dark"] .text-gray-600 { color: var(--gwc-text-2) !important; }
+html[data-theme="dark"] .text-slate-700,
+html[data-theme="dark"] .text-slate-800,
+html[data-theme="dark"] .text-slate-900,
+html[data-theme="dark"] .text-gray-800,
+html[data-theme="dark"] .text-black { color: var(--gwc-text) !important; }
+
+/* ---------- 边框 ---------- */
+html[data-theme="dark"] .border-\[\#e6d5b8\] { border-color: var(--gwc-border) !important; }
+html[data-theme="dark"] .border-\[\#d9c5b2\] { border-color: var(--gwc-border-2) !important; }
+html[data-theme="dark"] .border-slate-200,
+html[data-theme="dark"] .border-slate-300,
+html[data-theme="dark"] .border-gray-200,
+html[data-theme="dark"] .border-gray-300 { border-color: var(--gwc-border) !important; }
+
+/* ---------- 表单控件（含内置模块的内联样式）---------- */
+html[data-theme="dark"] input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select {
+  background-color: var(--gwc-panel-2) !important;
+  color: var(--gwc-text) !important;
+  border-color: var(--gwc-border) !important;
+}
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder { color: var(--gwc-text-3) !important; }
+html[data-theme="dark"] option { background-color: var(--gwc-panel-2); color: var(--gwc-text); }
+
+/* ---------- 内置模块（剧情IDE / 立绘模式）：覆盖内联样式 ---------- */
+html[data-theme="dark"] #sm-editor-modal,
+html[data-theme="dark"] #sm-story-selector > div,
+html[data-theme="dark"] #sm-story-save-ui > div {
+  background-color: var(--gwc-bg) !important;
+  color: var(--gwc-text) !important;
+}
+/* 顶栏、分区块等浅色内联背景统一压深 */
+html[data-theme="dark"] #sm-editor-modal [style*="#efe6d5"],
+html[data-theme="dark"] #sm-editor-modal [style*="#fdfaf5"],
+html[data-theme="dark"] #sm-editor-modal [style*="background: white"],
+html[data-theme="dark"] #sm-editor-modal [style*="background-color: white"] {
+  background-color: var(--gwc-panel) !important;
+}
+html[data-theme="dark"] #sm-editor-modal [style*="#d9c5b2"],
+html[data-theme="dark"] #sm-editor-modal [style*="#e6d5b8"] { border-color: var(--gwc-border) !important; }
+html[data-theme="dark"] #sm-editor-modal [style*="color: #4a4036"] { color: var(--gwc-text) !important; }
+html[data-theme="dark"] #sm-editor-modal [style*="color: #7a6b5d"] { color: var(--gwc-text-2) !important; }
+/* 剧情IDE 的浅色工具区（Tailwind slate 系）*/
+html[data-theme="dark"] #sm-editor-modal .bg-slate-50,
+html[data-theme="dark"] #sm-editor-modal .bg-slate-100,
+html[data-theme="dark"] #sm-editor-modal .bg-white { background-color: var(--gwc-panel) !important; }
+
+/* ---------- 设置面板（ATRI 主题）----------
+   该面板自带一套蓝色主题，且规则写在组件内联 <style> 中并大量使用 !important，
+   因此这里用更高优先级（html[data-theme] 前缀）+ !important 覆盖。
+   容器背景是内联 style 的渐变，必须同时覆盖 background-image。 */
+html[data-theme="dark"] .atri-container {
+  background-color: var(--gwc-bg) !important;
+  background-image:
+    radial-gradient(circle at 15% 30%, rgba(255,255,255,.05) 0%, rgba(255,255,255,0) 30%),
+    radial-gradient(circle at 85% 10%, rgba(255,255,255,.04) 0%, rgba(255,255,255,0) 35%),
+    linear-gradient(180deg, #202329 0%, #1a1b1e 60%) !important;
+  color: var(--gwc-text) !important;
+}
+/* 面板内的卡片：原为半透明白，深色下改为深灰半透明 */
+html[data-theme="dark"] .atri-container .bg-white\/60 {
+  background: rgba(255,255,255,.05) !important;
+  border: 1px solid rgba(255,255,255,.12) !important;
+  box-shadow: 0 4px 15px rgba(0,0,0,.35) !important;
+}
+/* ATRI 主题把正文改成了深蓝，深色下必须转为浅色 */
+html[data-theme="dark"] .atri-container .text-\[\#4a4036\] { color: var(--gwc-text) !important; }
+html[data-theme="dark"] .atri-container .text-\[\#7a6b5d\] { color: var(--gwc-text-2) !important; }
+html[data-theme="dark"] .atri-container .text-\[\#1e3a8a\],
+html[data-theme="dark"] .atri-container [class*="text-[#1e3a8a]"] { color: var(--gwc-text) !important; }
+/* 分区标题与标签：深蓝 → 亮蓝，保证在深底上可读 */
+html[data-theme="dark"] .atri-container h3.text-\[\#ba3f42\],
+html[data-theme="dark"] .atri-container label.text-\[\#ba3f42\] { color: #7cc4f5 !important; }
+/* 顶部标签栏（斜切按钮）压深 */
+html[data-theme="dark"] .atri-tab-btn::before { background: #2b3a46 !important; }
+html[data-theme="dark"] .atri-tab-btn.active-tab::before { background: var(--gwc-panel-2) !important; }
+html[data-theme="dark"] .atri-header::after { background: rgba(255,255,255,.06) !important; }
+/* 面板内滚动条 */
+html[data-theme="dark"] .light-scrollbar::-webkit-scrollbar-track { background: rgba(255,255,255,.06) !important; }
+html[data-theme="dark"] .light-scrollbar::-webkit-scrollbar-thumb { background: var(--gwc-border-2) !important; }
+
+/* ---------- 细节 ---------- */
+html[data-theme="dark"] ::-webkit-scrollbar-thumb { background-color: var(--gwc-border-2); }
+html[data-theme="dark"] ::-webkit-scrollbar-track { background-color: var(--gwc-panel); }
+/* 阴影在深色下几乎不可见，改用描边提升层次 */
+html[data-theme="dark"] .shadow-sm,
+html[data-theme="dark"] .shadow,
+html[data-theme="dark"] .shadow-md { box-shadow: 0 1px 3px rgba(0,0,0,.5) !important; }
+
+/* 主题切换时的柔和过渡（仅限颜色，避免影响动画性能）。
+   不限定 data-theme，否则只有切到深色时有过渡、切回浅色是瞬变，观感不一致。 */
+body, .bg-white, .bg-\[\#fdfaf5\], .bg-\[\#e8decb\] {
+  transition: background-color .2s ease, color .2s ease, border-color .2s ease;
+}
+/* 尊重系统的“减少动态效果”偏好 */
+@media (prefers-reduced-motion: reduce) {
+  body, .bg-white, .bg-\[\#fdfaf5\], .bg-\[\#e8decb\] { transition: none; }
+}

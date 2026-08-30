@@ -1,0 +1,12 @@
+{
+  "name": "gwc-deskpet",
+  "version": "1.0.0",
+  "description": "GWC Live2D Desktop Pet",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "electron": "28.3.3"
+  }
+}

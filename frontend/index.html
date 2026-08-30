@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GalGame Web Chat</title>
+  </head>
+  <body>
+    <script>
+      window.__voiceKey = 'ControlRight';
+      window.__voiceMode = 'hold';
+      window.__voiceHold = false;
+      window.__voiceToggle = false;
+      window.__voiceStart = function() {};
+      window.__voiceStop = function() {};
+      document.addEventListener('keydown', function(e) {
+        if (window.__voiceMode === 'auto') return;
+        if (e.code !== window.__voiceKey || e.repeat) return;
+        if (window.__voiceMode === 'hold') {
+          if (!window.__voiceHold) { window.__voiceHold = true; window.__voiceStart(); }
+        } else {
+          window.__voiceToggle = !window.__voiceToggle;
+          if (window.__voiceToggle) window.__voiceStart();
+          else window.__voiceStop();
+        }
+      });
+      document.addEventListener('keyup', function(e) {
+        if (window.__voiceMode !== 'hold') return;
+        if (e.code !== window.__voiceKey) return;
+        if (window.__voiceHold) { window.__voiceHold = false; window.__voiceStop(); }
+      });
+    </script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

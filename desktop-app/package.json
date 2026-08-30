@@ -1,0 +1,12 @@
+{
+  "name": "gwc-desktop",
+  "version": "1.0.0",
+  "description": "GWC 主界面桌面版（Electron）",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "electron": "28.3.3"
+  }
+}

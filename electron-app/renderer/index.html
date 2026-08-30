@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>GWC DeskPet</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <!-- MMD (three.js) 3D 渲染层，与 Live2D 叠加、按需切换显示 -->
+    <canvas id="mmd-canvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;display:none;"></canvas>
+
+    <!-- 桌面小聊天窗 -->
+    <div id="chat-container">
+        <div id="chat-messages"></div>
+        <div id="screenshot-preview" class="hidden">
+            <img id="screenshot-img" src="">
+            <button id="screenshot-cancel">✕</button>
+        </div>
+        <div id="chat-input-area">
+            <button id="btn-open-fullchat" title="打开快捷聊天">💬</button>
+            <button id="btn-mic" title="语音输入">🎤</button>
+            <button id="btn-screenshot-inline" title="截图">📷</button>
+            <input type="text" id="chat-input" placeholder="说点什么...">
+            <button id="chat-send" title="发送">➤</button>
+        </div>
+    </div>
+
+    <!-- 快捷聊天面板 -->
+    <div id="fullchat-panel" class="hidden">
+        <div class="fullchat-header">
+            <span>💬 快捷聊天</span>
+            <div class="fullchat-header-btns">
+                <button id="btn-topmost" title="切换置顶">📌</button>
+                <button id="btn-screenshot" title="截图">📷</button>
+                <button id="fullchat-close">✕</button>
+            </div>
+        </div>
+        <div id="fullchat-messages"></div>
+        <div id="fullchat-attachments" class="hidden">
+            <div id="fullchat-attachment-list"></div>
+        </div>
+        <div id="fullchat-input-area">
+            <button id="btn-upload" title="上传图片/文件">📎</button>
+            <input type="text" id="fullchat-input" placeholder="输入消息...">
+            <button id="btn-mic-fullchat" title="语音输入">🎤</button>
+            <button id="fullchat-send" title="发送">➤</button>
+        </div>
+        <input type="file" id="file-input" multiple accept="image/*,.txt,.md,.json,.csv,.pdf" style="display:none">
+    </div>
+
+    <!-- 设置面板 -->
+    <div id="settings-panel" class="hidden">
+        <div class="settings-content">
+            <div class="settings-header">
+                <h2>桌宠设置</h2>
+                <button id="settings-close">✕</button>
+            </div>
+            <div class="settings-section">
+                <h3>💬 大模型（继承前端设置）</h3>
+                <div id="llm-info" class="info-text">加载中...</div>
+                <p class="hint">请在 GWC 前端 → 设置 → API 中配置</p>
+            </div>
+            <div class="settings-section">
+                <h3>🔊 TTS 语音合成（继承前端设置）</h3>
+                <div id="tts-info" class="info-text">加载中...</div>
+                <p class="hint">请在 GWC 前端 → 设置 → 声音 中配置</p>
+            </div>
+            <div class="settings-section">
+                <h3>🎭 Live2D 模型切换</h3>
+                <p class="hint">自动扫描 live2d_models 文件夹</p>
+                <div class="form-group">
+                    <select id="model-select"><option value="">加载中...</option></select>
+                </div>
+                <button id="model-refresh" class="btn-secondary">🔄 重新扫描</button>
+            </div>
+            <div class="settings-section">
+                <h3>🧊 MMD 3D 模型</h3>
+                <p class="hint">把 .pmx 模型文件夹（含贴图、可选 .vmd 动作）放入 mmd_models 文件夹</p>
+                <div class="form-group">
+                    <label>模型</label>
+                    <select id="mmd-select"><option value="">（未选择 / 使用 Live2D）</option></select>
+                </div>
+                <div class="form-group">
+                    <label>动作 (.vmd)</label>
+                    <select id="mmd-motion-select"><option value="">无（静止站姿）</option></select>
+                </div>
+                <div class="form-group">
+                    <label>渲染方式</label>
+                    <select id="mmd-render-mode">
+                        <option value="toon">三渲二（卡通描边）</option>
+                        <option value="realistic">写实（真实光照）</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>全局亮度（整体偏暗时调高）</label>
+                    <input type="range" id="mmd-global-brightness" min="0.3" max="3" step="0.05" value="1.35" style="width:100%">
+                    <p class="hint">直接提升画面整体亮度（黑色描边不受影响）。</p>
+                </div>
+                <div class="form-group">
+                    <label>默认站姿手臂下垂角度</label>
+                    <input type="range" id="mmd-restpose" min="0" max="70" step="1" value="30" style="width:100%">
+                    <p class="hint">MMD 绑定姿势手臂外张，此项让无动作时双手自然垂落。0 = 用模型原始姿势。</p>
+                </div>
+                <div class="form-group">
+                    <label>亮度修正（模型发白时调低）</label>
+                    <input type="range" id="mmd-brightness" min="0" max="1" step="0.05" value="0.2" style="width:100%">
+                    <p class="hint">MMD 模型自带的环境色常导致整体发白，调低即可恢复明暗层次。</p>
+                </div>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="mmd-outline" checked> 卡通描边（关闭可提升帧率）
+                </label>
+                <div class="form-group">
+                    <label>描边粗细（脸上有黑点时调低）</label>
+                    <input type="range" id="mmd-outline-scale" min="0" max="2" step="0.05" value="0.5" style="width:100%">
+                    <p class="hint">描边过粗会把鼻子等细小部位糊成黑块。</p>
+                </div>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="mmd-physics"> 启用骨骼物理（头发/裙摆摆动）
+                </label>
+                <p class="hint">物理默认关闭。请先确认模型能正常显示，再勾选启用。</p>
+                <div class="form-group">
+                    <label>物理阻尼（头发/裙摆抖动时调高）</label>
+                    <input type="range" id="mmd-damping" min="0" max="0.99" step="0.05" value="0" style="width:100%">
+                    <p class="hint">0 = 使用模型自带参数。抖动不停时向右调（建议先试 0.3～0.6）。</p>
+                </div>
+                <div class="form-group">
+                    <label>求解器迭代次数（高级）</label>
+                    <input type="range" id="mmd-solver" min="4" max="120" step="2" value="10" style="width:100%">
+                    <p class="hint">默认 10（Bullet 原生值）。实测对 MMD 模型<b>调高反而更抖</b>，一般无需改动；抖动时可试着往低调。</p>
+                </div>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="mmd-reload-on-motion"> 切换动作时重新渲染模型
+                </label>
+                <p class="hint">默认关闭：切动作只换动作，秒切。开启后每次切动作都完整重载模型（贴图多的模型会慢十几秒），适合动作切换后显示异常时使用。</p>
+                <button id="mmd-rerender" class="btn-secondary">🎬 重新渲染模型</button>
+                <button id="mmd-refresh" class="btn-secondary">🔄 重新扫描</button>
+                <button id="mmd-unload" class="btn-secondary">↩️ 卸载 MMD，返回 Live2D</button>
+                <div id="mmd-status" class="hint"></div>
+            </div>
+            <div class="settings-section">
+                <h3>👁️ 辅助识图模型（可选）</h3>
+                <p class="hint">当主模型不支持多模态时，使用此模型识别截图/图片</p>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="vision-enabled"> 启用辅助识图
+                </label>
+                <div class="form-group">
+                    <label>API Base URL</label>
+                    <input type="text" id="vision-base-url" placeholder="https://api.openai.com/v1">
+                </div>
+                <div class="form-group">
+                    <label>API Key</label>
+                    <input type="password" id="vision-api-key" placeholder="sk-...">
+                </div>
+                <div class="form-group">
+                    <label>模型名称</label>
+                    <input type="text" id="vision-model" placeholder="gpt-4o">
+                </div>
+            </div>
+            <div class="settings-section">
+                <h3>🖥️ 界面</h3>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="hide-chat"> 隐藏桌面聊天框
+                </label>
+            </div>
+            <button id="settings-save" class="btn-save">保存设置</button>
+        </div>
+    </div>
+
+    <!-- 气泡 -->
+    <div id="bubble-container">
+        <div id="bubble-text"></div>
+    </div>
+
+    <script src="../libs/live2d.min.js"></script>
+    <script src="../libs/live2dcubismcore.min.js"></script>
+    <script src="../libs/pixi.min.js"></script>
+    <script src="../libs/pixi-live2d-display.min.js"></script>
+    <script src="../libs/pixi-live2d-display-extra.min.js"></script>
+    <script src="renderer.js"></script>
+    <!-- MMD (three.js) 渲染引擎
+         页面走 file:// 协议，Chromium 下 ES module 会被 CORS 阻断且静默失败，
+         故使用打包好的 IIFE（由 build-mmd.mjs 从 mmd.src.js 生成），普通 script 引入。 -->
+    <!-- 用 WASM 版 ammo：asm.js 版会在主线程同步编译并分配 64MB，导致开启物理时卡死 -->
+    <script defer src="../libs/three/jsm/libs/ammo.wasm.js"></script>
+    <script defer src="mmd.bundle.js"></script>
+</body>
+</html>

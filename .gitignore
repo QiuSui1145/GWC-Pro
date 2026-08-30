@@ -1,0 +1,47 @@
+# === 敏感数据 ===
+userdata/
+*.log
+CRASH_LOG.txt
+
+# === 运行时 / 模型 / 大型依赖（首次运行自建，不入库） ===
+backend/runtime/
+backend/asr_model/
+backend/llama_cpp/
+
+# === 模型文件 ===
+live2d_models/
+# MMD 用户模型（大文件），保留说明文件
+mmd_models/*
+!mmd_models/把MMD模型放这里.txt
+# 共享动作库：目录本身保留，内容（用户的 .vmd）忽略，仅保留说明文件
+!mmd_models/_motions/
+mmd_models/_motions/*
+!mmd_models/_motions/把动作文件放这里.txt
+
+# 内置配音 (GPT-SoVITS)：推理代码、底模与音色共约 3.7GB，不入库。
+# 仅保留启动脚本、复制脚本与说明，便于在新机器上重新生成。
+tts/*
+!tts/start_tts.bat
+!tts/copy_tts.py
+!tts/README.md
+
+# === 官网介绍页（仅根目录的 index.html；frontend/index.html 为 Vite 入口需保留） ===
+/index.html
+
+# === 运行时产物 ===
+__pycache__/
+*.pyc
+.venv/
+node_modules/
+dist/
+# 桌宠 MMD 打包产物（由 electron-app/build-mmd.mjs 从 mmd.src.js 生成）
+electron-app/renderer/mmd.bundle.js
+
+# === IDE ===
+.vscode/
+.idea/
+*.swp
+
+# === OS ===
+Thumbs.db
+Desktop.ini
